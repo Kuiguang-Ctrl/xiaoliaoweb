@@ -1,0 +1,22 @@
+# ─── 开发环境 ───
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:xiaoliao}
+    username: ${DB_USER:xiaoliao}
+    password: ${DB_PASSWORD:xiaoliao_dev}
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  # 开发时打印 SQL
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.xiaoliao: DEBUG
+    me.chanjar.weixin: DEBUG

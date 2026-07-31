@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # ─── PostgreSQL + pgvector ───
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: xiaoliao-pg
+    environment:
+      POSTGRES_DB: ${DB_NAME:-xiaoliao}
+      POSTGRES_USER: ${DB_USER:-xiaoliao}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-xiaoliao_dev}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-xiaoliao} -d ${DB_NAME:-xiaoliao}"]
+      interval: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ─── Redis ───
+  redis:
+    image: redis:7-alpine
+    container_name: xiaoliao-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ─── Java 主服务 ───
+  xiaoliao-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: xiaoliao-api
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-xiaoliao}
+      DB_USER: ${DB_USER:-xiaoliao}
+      DB_PASSWORD: ${DB_PASSWORD:-xiaoliao_dev}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-engine:8081}
+      WECOM_KF_OPEN_KFID: ${WECOM_KF_OPEN_KFID:-}
+      WECOM_MINIPROGRAM_APPID: ${WECOM_MINIPROGRAM_APPID:-}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:

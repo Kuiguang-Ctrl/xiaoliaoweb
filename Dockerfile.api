@@ -1,0 +1,25 @@
+# ─── Java 主服务 Dockerfile ───
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+
+# 先拷贝父 pom 和模块 pom，利用 Docker 缓存加速
+COPY pom.xml .
+COPY xiaoliao-common/pom.xml xiaoliao-common/
+COPY xiaoliao-api/pom.xml xiaoliao-api/
+COPY xiaoliao-task/pom.xml xiaoliao-task/
+
+# 下载依赖（无源码，缓存层）
+RUN mvn dependency:go-offline -B -pl xiaoliao-api
+
+# 拷贝源码并构建
+COPY xiaoliao-common/src xiaoliao-common/src
+COPY xiaoliao-api/src xiaoliao-api/src
+RUN mvn package -DskipTests -pl xiaoliao-api -am
+
+# ─── 运行镜像 ───
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /app/xiaoliao-api/target/*.jar app.jar
+
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
