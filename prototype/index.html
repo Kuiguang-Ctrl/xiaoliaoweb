@@ -715,6 +715,201 @@
   }
   .legend-item .text b { color: #333; }
 
+  /* ═══════════════════════════════════════ */
+  /* 企微聊天页（微信原生界面）                */
+  /* ═══════════════════════════════════════ */
+  .chat-screen {
+    background: #EDEDED;
+    display: flex;
+    flex-direction: column;
+  }
+  .chat-nav {
+    background: #EDEDED;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-bottom: 1px solid #ddd;
+    flex-shrink: 0;
+  }
+  .chat-nav .title { font-size: 17px; font-weight: 600; color: #181818; }
+  .chat-nav .back { position: absolute; left: 12px; font-size: 22px; color: #181818; }
+  .chat-nav .more { position: absolute; right: 16px; font-size: 20px; color: #181818; }
+
+  .chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 12px 0;
+  }
+  .chat-body::-webkit-scrollbar { width: 0; }
+
+  .chat-time {
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+    margin: 12px 0;
+  }
+
+  .chat-msg {
+    display: flex;
+    margin-bottom: 16px;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .chat-msg.right { flex-direction: row-reverse; }
+
+  .chat-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .avatar-bot { background: #FFCCBC; }
+  .avatar-user { background: #C8E6C9; }
+
+  .chat-bubble {
+    max-width: 230px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    line-height: 1.5;
+    position: relative;
+  }
+  .chat-msg .chat-bubble {
+    background: #fff;
+    color: #333;
+  }
+  .chat-msg .chat-bubble::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 14px;
+    border: 6px solid transparent;
+    border-right-color: #fff;
+    border-left: none;
+  }
+  .chat-msg.right .chat-bubble {
+    background: #95EC69;
+    color: #181818;
+  }
+  .chat-msg.right .chat-bubble::before {
+    left: auto;
+    right: -6px;
+    border-right-color: transparent;
+    border-left-color: #95EC69;
+  }
+
+  /* 小程序卡片 */
+  .mini-card {
+    max-width: 250px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+  .mini-card::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 14px;
+    border: 6px solid transparent;
+    border-right-color: #fff;
+    border-left: none;
+  }
+  .mini-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px 8px;
+  }
+  .mini-card .card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .mini-card .card-app-name {
+    font-size: 13px;
+    color: #888;
+  }
+  .mini-card .card-body {
+    padding: 0 14px 12px;
+  }
+  .mini-card .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  .mini-card .card-desc {
+    font-size: 14px;
+    color: #888;
+  }
+  .mini-card .card-image {
+    width: 100%;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+  }
+  .mini-card .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .mini-card .card-footer .from {
+    font-size: 12px;
+    color: #aaa;
+  }
+  .mini-card .card-footer .mini-tag {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    color: #aaa;
+  }
+
+  /* 输入栏 */
+  .chat-input-bar {
+    height: 52px;
+    background: #F7F7F7;
+    border-top: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    flex-shrink: 0;
+  }
+  .chat-input-bar .icon-btn {
+    font-size: 26px;
+    color: #666;
+    width: 36px;
+    text-align: center;
+  }
+  .chat-input-bar .input-field {
+    flex: 1;
+    height: 36px;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 16px;
+    color: #999;
+  }
+
   /* 底部说明 */
   .footer-note {
     text-align: center;
@@ -1139,9 +1334,173 @@
     </div>
   </div>
 
-</div>
+  <!-- ════════ 8. 企微聊天页（微信原生） ════════ -->
+  <div class="phone-wrapper">
+    <div class="phone-label">企微对话 <span class="tag" style="background:#07C160">M7</span></div>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:30</span>
+        <span class="icons"><span>●●●●</span> <span>📶</span> <span>🔋</span></span>
+      </div>
+      <div class="chat-screen">
+        <div class="chat-nav">
+          <span class="back">‹</span>
+          <span class="title">小辽</span>
+          <span class="more">⋯</span>
+        </div>
+        <div class="chat-body">
+          <div class="chat-time">今天 9:28</div>
 
-<!-- 图例说明 -->
+          <!-- AI 欢迎语 -->
+          <div class="chat-msg">
+            <div class="chat-avatar avatar-bot">🌻</div>
+            <div class="chat-bubble">王阿姨早上好呀！新的一天开始啦～今天心情怎么样？跟小辽说说吧 😊</div>
+          </div>
+
+          <!-- 用户回复 -->
+          <div class="chat-msg right">
+            <div class="chat-avatar avatar-user">王</div>
+            <div class="chat-bubble">今天心情不错，去公园打了太极</div>
+          </div>
+
+          <!-- AI 回复 + 小程序卡片 -->
+          <div class="chat-msg">
+            <div class="chat-avatar avatar-bot">🌻</div>
+            <div class="chat-bubble">太棒了！打太极对身体好，心情好更重要 🌞<br><br>来记一下今天的心情吧，点下面就能签到～</div>
+          </div>
+
+          <!-- 小程序卡片 -->
+          <div class="chat-msg">
+            <div class="chat-avatar avatar-bot">🌻</div>
+            <div class="mini-card">
+              <div class="card-header">
+                <div class="card-icon" style="background:#FFE0B2">📝</div>
+                <span class="card-app-name">小辽</span>
+              </div>
+              <div class="card-body">
+                <div class="card-title">今日签到</div>
+                <div class="card-desc">记录心情，每天进步一点点</div>
+              </div>
+              <div class="card-image" style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2)">☀️</div>
+              <div class="card-footer">
+                <span class="from">小辽</span>
+                <span class="mini-tag">🔗 小程序</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 用户点卡片后回来对话 -->
+          <div class="chat-time">今天 9:42</div>
+          <div class="chat-msg right">
+            <div class="chat-avatar avatar-user">王</div>
+            <div class="chat-bubble">签完到了！还做了三件好事练习</div>
+          </div>
+
+          <!-- AI 正反馈 -->
+          <div class="chat-msg">
+            <div class="chat-avatar avatar-bot">🌻</div>
+            <div class="chat-bubble">王阿姨真厉害！已经连续签到12天了 🔥<br><br>您写的好事小辽看到了，能发现生活里的小美好，这就是幸福的秘密呀～</div>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <span class="icon-btn">🗣</span>
+          <div class="input-field">跟小辽说说话…</div>
+          <span class="icon-btn">😀</span>
+          <span class="icon-btn">＋</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ 9. 企微聊天页2 — 游戏推荐场景 ════════ -->
+  <div class="phone-wrapper">
+    <div class="phone-label">对话-游戏推荐 <span class="tag" style="background:#07C160">M7</span></div>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">14:15</span>
+        <span class="icons"><span>●●●●</span> <span>📶</span> <span>🔋</span></span>
+      </div>
+      <div class="chat-screen">
+        <div class="chat-nav">
+          <span class="back">‹</span>
+          <span class="title">小辽</span>
+          <span class="more">⋯</span>
+        </div>
+        <div class="chat-body">
+          <div class="chat-time">今天 14:10</div>
+
+          <div class="chat-msg right">
+            <div class="chat-avatar avatar-user">王</div>
+            <div class="chat-bubble">下午没事干，有点无聊</div>
+          </div>
+
+          <div class="chat-msg">
+            <div class="chat-avatar avatar-bot">🌻</div>
+            <div class="chat-bubble">下午茶时间到啦！要不要来动动脑？小辽给您挑了个好玩的 🧩</div>
+          </div>
+
+          <!-- 游戏推荐卡片 -->
+          <div class="chat-msg">
+            <div class="chat-avatar avatar-bot">🌻</div>
+            <div class="mini-card">
+              <div class="card-header">
+                <div class="card-icon" style="background:#BBDEFB">🧩</div>
+                <span class="card-app-name">小辽</span>
+              </div>
+              <div class="card-body">
+                <div class="card-title">算术达人</div>
+                <div class="card-desc">快速计算，锻炼反应力 · 5分钟</div>
+              </div>
+              <div class="card-image" style="background:linear-gradient(135deg,#E3F2FD,#BBDEFB)">🔢</div>
+              <div class="card-footer">
+                <span class="from">小辽</span>
+                <span class="mini-tag">🔗 小程序</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-time">今天 14:25</div>
+          <div class="chat-msg right">
+            <div class="chat-avatar avatar-user">王</div>
+            <div class="chat-bubble">玩完了，得了85分！比上次高</div>
+          </div>
+
+          <div class="chat-msg">
+            <div class="chat-avatar avatar-bot">🌻</div>
+            <div class="chat-bubble">进步了10分呢！王阿姨的脑子越来越灵光了 💪<br><br>要不要去社区跟朋友们分享一下？</div>
+          </div>
+
+          <!-- 社区卡片 -->
+          <div class="chat-msg">
+            <div class="chat-avatar avatar-bot">🌻</div>
+            <div class="mini-card">
+              <div class="card-header">
+                <div class="card-icon" style="background:#E1BEE7">💬</div>
+                <span class="card-app-name">小辽</span>
+              </div>
+              <div class="card-body">
+                <div class="card-title">大家聊</div>
+                <div class="card-desc">和朋友们分享你的成绩</div>
+              </div>
+              <div class="card-image" style="background:linear-gradient(135deg,#F3E5F5,#E1BEE7)">💬</div>
+              <div class="card-footer">
+                <span class="from">小辽</span>
+                <span class="mini-tag">🔗 小程序</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <span class="icon-btn">🗣</span>
+          <div class="input-field">跟小辽说说话…</div>
+          <span class="icon-btn">😀</span>
+          <span class="icon-btn">＋</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
 <div class="legend">
   <h3>设计说明</h3>
   <div class="legend-grid">
@@ -1160,6 +1519,10 @@
     <div class="legend-item">
       <div class="color" style="background:#AB47BC"></div>
       <div class="text"><b>紫色</b> — 社区模块，温馨社交，区别于功能页</div>
+    </div>
+    <div class="legend-item">
+      <div class="color" style="background:#07C160"></div>
+      <div class="text"><b>微信绿</b> — 企微对话界面（M7），使用微信原生聊天 UI，不单独开发页面。AI 回复文字 + 小程序卡片，老人点卡片跳转功能页</div>
     </div>
     <div class="legend-item">
       <div class="color" style="background:#333"></div>
