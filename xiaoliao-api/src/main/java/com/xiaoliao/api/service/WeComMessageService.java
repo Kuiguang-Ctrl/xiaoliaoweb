@@ -66,21 +66,27 @@ public class WeComMessageService {
 
     /**
      * 根据意图类型发送对应的回复 + 卡片
+     *
+     * @param token JWT 令牌，拼到小程序卡片 pagePath 里，供小程序登录用
      */
     public void sendIntentReply(String openid, String openKfid,
                                  String textReply, IntentType intent,
-                                 String appId, String thumbMediaId) {
+                                 String appId, String token) {
         // 1. 先发文本
         sendText(openid, openKfid, textReply);
 
-        // 2. 如果需要卡片，发卡片
+        // 2. 如果需要卡片，发卡片（token 拼到链接里）
         if (intent.needsCard()) {
+            String pagePath = intent.getPagePath();
+            if (token != null && !token.isBlank()) {
+                pagePath = pagePath + (pagePath.contains("?") ? "&" : "?") + "token=" + token;
+            }
             sendMiniProgramCard(
                     openid, openKfid,
                     intent.getLabel(),
-                    intent.getPagePath(),
+                    pagePath,
                     appId,
-                    thumbMediaId
+                    null
             );
         }
     }
