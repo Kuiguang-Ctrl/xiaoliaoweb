@@ -63,59 +63,8 @@ COMMENT ON COLUMN lessons.status IS 'pending / verified / rejected';
 CREATE INDEX idx_lessons_status ON lessons(status);
 -- pgvector 索引稍后手动创建，IVFFlat 需要数据量达标
 
--- ─── 签到记录表 ───
-CREATE TABLE checkin_records (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id     UUID NOT NULL REFERENCES users(id),
-    mood        VARCHAR(16) NOT NULL,
-    mood_note   TEXT,
-    checkin_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    created_at  TIMESTAMP NOT NULL DEFAULT now()
-);
-COMMENT ON TABLE checkin_records IS '每日签到与情绪记录';
-COMMENT ON COLUMN checkin_records.mood IS '情绪: sunny/cloudy/rainy';
-COMMENT ON COLUMN checkin_records.mood_note IS '情绪备注';
-
-CREATE INDEX idx_checkin_user_date ON checkin_records(user_id, checkin_date);
-
--- ─── 游戏记录表 ───
-CREATE TABLE game_records (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id     UUID NOT NULL REFERENCES users(id),
-    game_type   VARCHAR(32) NOT NULL,
-    score       INT,
-    duration_seconds INT,
-    details     JSONB,
-    created_at  TIMESTAMP NOT NULL DEFAULT now()
-);
-COMMENT ON TABLE game_records IS '脑力游戏记录';
-COMMENT ON COLUMN game_records.game_type IS 'number_memory / color_reaction / word_match / spatial';
-
-CREATE INDEX idx_games_user_time ON game_records(user_id, created_at);
-
--- ─── 心理练习记录表 ───
-CREATE TABLE exercise_records (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id     UUID NOT NULL REFERENCES users(id),
-    exercise_type VARCHAR(32) NOT NULL,
-    content     TEXT,
-    created_at  TIMESTAMP NOT NULL DEFAULT now()
-);
-COMMENT ON TABLE exercise_records IS '积极心理练习记录';
-COMMENT ON COLUMN exercise_records.exercise_type IS 'three_good_things / gratitude / reframing';
-
-CREATE INDEX idx_exercise_user_time ON exercise_records(user_id, created_at);
-
--- ─── 心理测评记录表 ───
-CREATE TABLE assessment_records (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id     UUID NOT NULL REFERENCES users(id),
-    scale_type  VARCHAR(32) NOT NULL,
-    score       INT NOT NULL,
-    result      TEXT,
-    created_at  TIMESTAMP NOT NULL DEFAULT now()
-);
-COMMENT ON TABLE assessment_records IS '心理测评记录';
-COMMENT ON COLUMN assessment_records.scale_type IS 'gds / sas';
-
-CREATE INDEX idx_assess_user ON assessment_records(user_id, created_at);
+-- ─── 以下功能模块表待重新设计 ───
+-- checkin_records  (M1 签到情绪)
+-- game_records      (M2 脑力游戏)
+-- exercise_records  (M3 心理练习)
+-- assessment_records(M9 心理测评)

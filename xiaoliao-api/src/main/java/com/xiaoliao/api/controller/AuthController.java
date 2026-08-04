@@ -6,6 +6,8 @@ import com.xiaoliao.api.entity.User;
 import com.xiaoliao.api.service.UserService;
 import com.xiaoliao.api.util.TokenUtil;
 import com.xiaoliao.common.dto.Result;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * 老人全程无感，不需要输入手机号/验证码。
  */
 @Slf4j
+@Tag(name = "认证接口", description = "小程序登录验证、JWT token 校验")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -31,6 +34,7 @@ public class AuthController {
      * <p>
      * 小程序打开时调用：POST /api/auth/verify-token { "token": "xxx" }
      */
+    @Operation(summary = "验证 JWT Token", description = "小程序打开时调用，用 JWT token 换取用户信息")
     @PostMapping("/verify-token")
     public Result<VerifyTokenResponse> verifyToken(@Valid @RequestBody VerifyTokenRequest request) {
         String userId = tokenUtil.parseUserId(request.getToken());

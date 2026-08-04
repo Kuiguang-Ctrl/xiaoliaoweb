@@ -1,7 +1,7 @@
 # ─── 开发环境 ───
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:xiaoliao}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:xiaoliao_dev}
     username: ${DB_USER:xiaoliao}
     password: ${DB_PASSWORD:xiaoliao_dev}
     driver-class-name: org.postgresql.Driver

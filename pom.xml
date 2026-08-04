@@ -40,6 +40,9 @@
         <lombok.version>1.18.32</lombok.version>
         <jackson.version>2.17.0</jackson.version>
         <jjwt.version>0.12.6</jjwt.version>
+
+        <!-- Knife4j (OpenAPI3 + Swagger) -->
+        <knife4j.version>4.5.0</knife4j.version>
     </properties>
 
     <dependencyManagement>
@@ -122,6 +125,13 @@
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-jackson</artifactId>
                 <version>${jjwt.version}</version>
+            </dependency>
+
+            <!-- Knife4j - OpenAPI3 文档 -->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

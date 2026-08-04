@@ -14,7 +14,7 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
-# ─── 小辽自定义配置 ───
+  # ─── 小辽自定义配置 ───
 xiaoliao:
   ai:
     base-url: ${AI_SERVICE_URL:http://localhost:8081}
@@ -23,6 +23,22 @@ xiaoliao:
   jwt:
     secret: ${XIAOLIAO_JWT_SECRET:xiaoliao-dev-secret-change-in-production-2026}
     expire-hours: 168
+
+# ─── springdoc-openapi 配置（Knife4j 底层使用） ───
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  packages-to-scan: com.xiaoliao.api.controller
+
+# ─── Knife4j 配置 ───
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
 
 # ─── 企业微信（敏感信息通过环境变量注入） ───
 wecom:
