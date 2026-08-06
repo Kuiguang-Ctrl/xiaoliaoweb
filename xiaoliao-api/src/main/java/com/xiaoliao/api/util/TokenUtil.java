@@ -58,15 +58,18 @@ public class TokenUtil {
         if (token == null || token.isBlank()) {
             return null;
         }
-        // 去掉 Bearer 前缀
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7);
+        // 去掉 Bearer 前缀（大小写不敏感、可能多个空格）
+        String t = token.trim();
+        if (t.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            t = t.substring(7);
         }
+        // 去掉所有空白字符：复制长 token 时可能被换行/空格拆开，而 JWT 本身不含任何空白
+        t = t.replaceAll("\\s", "");
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(key)
                     .build()
-                    .parseSignedClaims(token)
+                    .parseSignedClaims(t)
                     .getPayload();
             return claims.getSubject();
         } catch (JwtException e) {

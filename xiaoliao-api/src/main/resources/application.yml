@@ -23,6 +23,10 @@ xiaoliao:
   jwt:
     secret: ${XIAOLIAO_JWT_SECRET:xiaoliao-dev-secret-change-in-production-2026}
     expire-hours: 168
+  auth:
+    # 鉴权开关：true=正式校验 token；false=跳过（仅联调用，配 mock-user-id）
+    enabled: true
+    mock-user-id: ""
 
 # ─── 企业微信（敏感信息通过环境变量注入） ───
 wecom:

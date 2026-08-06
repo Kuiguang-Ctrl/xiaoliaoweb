@@ -8,6 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * AI 服务客户端 — 调用 Python AI 引擎
  */
@@ -19,12 +23,22 @@ public class AiService {
     private final RestClient aiRestClient;
 
     /**
-     * 发送对话请求到 Python AI 引擎
+     * 发送对话请求到 Python AI 引擎（无历史）
      */
     public ChatResponse chat(String userId, String message) {
+        return chat(userId, message, new ArrayList<>());
+    }
+
+    /**
+     * 发送对话请求到 Python AI 引擎（带历史，支持多轮）
+     *
+     * @param conversationHistory 历史消息，按时间顺序，每项 {role: user/assistant/system, content}
+     */
+    public ChatResponse chat(String userId, String message, List<Map<String, String>> conversationHistory) {
         ChatRequest request = ChatRequest.builder()
                 .userId(userId)
                 .message(message)
+                .conversationHistory(conversationHistory != null ? conversationHistory : new ArrayList<>())
                 .build();
 
         try {

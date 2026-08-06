@@ -25,6 +25,6 @@ public class ChatResponse {
     /** 副Agent 5维检验结果 */
     private Map<String, Object> inspection;
 
-    /** RAG 检索到的上下文列表 */
-    private List<String> retrievedContexts;
+    /** RAG 检索到的上下文列表（每项含 chunk_id / heading / score） */
+    private List<Map<String, Object>> retrievedContexts;
 }

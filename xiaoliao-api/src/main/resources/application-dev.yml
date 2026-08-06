@@ -1,4 +1,10 @@
 # ─── 开发环境 ───
+# 开发时跳过鉴权，固定用 mock 用户（联调方便；正式环境用 application.yml 的 enabled:true）
+xiaoliao:
+  auth:
+    enabled: false
+    mock-user-id: 7764978f-9019-4b2f-b6b1-11862c1a5528
+
 spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:xiaoliao}
