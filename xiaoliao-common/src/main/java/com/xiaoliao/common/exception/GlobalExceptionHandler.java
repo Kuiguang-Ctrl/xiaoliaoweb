@@ -4,10 +4,12 @@ import com.xiaoliao.common.dto.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.format.DateTimeParseException;
 import java.util.stream.Collectors;
@@ -50,6 +52,20 @@ public class GlobalExceptionHandler {
     public Result<?> handleDateTime(DateTimeParseException e) {
         log.warn("日期格式异常: {}", e.getMessage());
         return Result.fail(400, "日期格式错误，应为 yyyy-MM-dd");
+    }
+
+    /** HTTP 方法不支持（如 GET /api/chat，接口只收 POST） */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public Result<?> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        log.warn("请求方法不支持: {} {}", e.getMethod(), e.getMessage());
+        return Result.fail(405, "请求方式不正确，请用正确的请求方式");
+    }
+
+    /** 静态资源不存在（如 favicon.ico） */
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result<?> handleNotFound(NoResourceFoundException e) {
+        return Result.fail(404, "资源不存在");
     }
 
     /** 兜底：未知系统异常 */

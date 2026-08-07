@@ -19,7 +19,8 @@ xiaoliao:
   ai:
     base-url: ${AI_SERVICE_URL:http://localhost:8081}
     connect-timeout: 3s
-    read-timeout: 15s
+    # Python 引擎双模型+知识库推理约 10-15s，留足余量
+    read-timeout: 60s
   jwt:
     secret: ${XIAOLIAO_JWT_SECRET:xiaoliao-dev-secret-change-in-production-2026}
     expire-hours: 168
