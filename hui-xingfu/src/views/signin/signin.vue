@@ -60,7 +60,11 @@
           <Icon name="calendar" :size="20" color="var(--color-primary)" aria-hidden="true" />
           情绪月历
         </h2>
-        <span class="calendar_month">{{ currentYearMonth }}</span>
+        <div class="month_nav">
+          <button class="month_btn" @click="changeMonth(-1)" aria-label="上个月">‹</button>
+          <span class="calendar_month">{{ currentYearMonth }}</span>
+          <button class="month_btn" @click="changeMonth(1)" aria-label="下个月">›</button>
+        </div>
       </div>
       <div class="calendar_grid">
         <div class="day_label" v-for="d in weekDays" :key="d">{{ d }}</div>
@@ -99,13 +103,7 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import Icon from '@/components/Icon.vue'
 import BottomNav from '@/components/BottomNav.vue'
-
-const STORAGE_KEY = 'hui_signin_data'
-
-function getSigninData() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } catch { return {} }
-}
-function setSigninData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)) }
+import { checkTodaySignin, getSigninHistory, doSignin } from '@/api/signin'
 
 /* ---- 2026 年中国法定节假日 ---- */
 const HOLIDAYS_2026 = {
@@ -142,8 +140,9 @@ export default {
     const selectedEmotion = ref(null)
     const emotionMessage = ref('')
     const signinHistory = reactive({})
-    const currentMonth = new Date().getMonth() + 1
-    const currentYear = new Date().getFullYear()
+    const now = new Date()
+    const currentYear = ref(now.getFullYear())
+    const currentMonth = ref(now.getMonth() + 1)
 
     const weekDays = ['一', '二', '三', '四', '五', '六', '日']
 
@@ -161,12 +160,12 @@ export default {
     }
     const emotionColor = (key) => emotionColorMap[key] || 'var(--color-text-light)'
 
-    const currentYearMonth = computed(() => `${currentYear}年${currentMonth}月`)
+    const currentYearMonth = computed(() => `${currentYear.value}年${currentMonth.value}月`)
 
     const calendarDays = computed(() => {
       const days = []
-      const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay()
-      const daysInMonth = new Date(currentYear, currentMonth, 0).getDate()
+      const firstDay = new Date(currentYear.value, currentMonth.value - 1, 1).getDay()
+      const daysInMonth = new Date(currentYear.value, currentMonth.value, 0).getDate()
       const today = new Date().getDate()
 
       const offset = firstDay === 0 ? 6 : firstDay - 1
@@ -175,11 +174,11 @@ export default {
       }
 
       const isCurrentMonth =
-        currentMonth === new Date().getMonth() + 1 && currentYear === new Date().getFullYear()
+        currentMonth.value === new Date().getMonth() + 1 && currentYear.value === new Date().getFullYear()
 
       for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-        const mmdd = `${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+        const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+        const mmdd = `${String(currentMonth.value).padStart(2, '0')}-${String(d).padStart(2, '0')}`
         const record = signinHistory[dateStr]
 
         days.push({
@@ -203,30 +202,45 @@ export default {
       return classes
     }
 
-    /* ---- 从 localStorage 加载数据 ---- */
-    const loadSigninData = () => {
-      const data = getSigninData()
-      const today = new Date()
-      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-
-      // 加载历史记录
-      Object.keys(signinHistory).forEach((k) => delete signinHistory[k])
-      if (data.history) {
-        Object.keys(data.history).forEach((k) => {
-          signinHistory[k] = data.history[k]
-        })
+    /* ---- 从后端加载数据（今日状态 + 当前月月历） ---- */
+    const loadSigninData = async () => {
+      try {
+        const today = await checkTodaySignin()
+        isSignedToday.value = today.data.signed
+        selectedEmotion.value = today.data.emotion
+        streakDays.value = today.data.streak
+      } catch (e) {
+        console.warn('加载签到状态失败:', e)
       }
-
-      // 检查今天是否签到
-      if (data.history && data.history[dateStr]) {
-        isSignedToday.value = true
-        selectedEmotion.value = data.history[dateStr].emotion
-      }
-      streakDays.value = data.streak || 0
+      await loadMonthCalendar()
     }
 
-    /* ---- 选择/修改情绪 ---- */
-    const handleEmotionSelect = (value) => {
+    /* ---- 加载指定月份的情绪月历 ---- */
+    const loadMonthCalendar = async () => {
+      try {
+        const history = await getSigninHistory(currentYear.value, currentMonth.value)
+        Object.keys(signinHistory).forEach((k) => delete signinHistory[k])
+        ;(history.data || []).forEach((h) => {
+          signinHistory[h.date] = { date: h.date, emotion: h.emotion }
+        })
+      } catch (e) {
+        console.warn('加载月历失败:', e)
+      }
+    }
+
+    /* ---- 切换月份（上一月/下一月） ---- */
+    const changeMonth = async (delta) => {
+      let y = currentYear.value
+      let m = currentMonth.value + delta
+      if (m < 1) { m = 12; y -= 1 }
+      if (m > 12) { m = 1; y += 1 }
+      currentYear.value = y
+      currentMonth.value = m
+      await loadMonthCalendar()
+    }
+
+    /* ---- 选择/修改情绪（同步到后端） ---- */
+    const handleEmotionSelect = async (value) => {
       selectedEmotion.value = value
       const selected = emotionOptions.find((item) => item.value === value)
       if (selected) {
@@ -234,15 +248,16 @@ export default {
         setTimeout(() => { emotionMessage.value = '' }, 2800)
       }
 
-      // 已签到则更新情绪到 localStorage
-      if (isSignedToday.value) {
-        const data = getSigninData()
+      try {
+        // 无论首次签到还是改情绪，都调后端记录
+        const res = await doSignin(value)
+        streakDays.value = res.data.streak
+        isSignedToday.value = true
         const today = new Date()
         const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-        if (!data.history) data.history = {}
-        data.history[dateStr] = { date: dateStr, emotion: value }
-        setSigninData(data)
         signinHistory[dateStr] = { date: dateStr, emotion: value }
+      } catch (e) {
+        console.warn('更新情绪失败:', e)
       }
     }
 
@@ -254,7 +269,7 @@ export default {
       isSignedToday, streakDays, streakChanged,
       selectedEmotion, emotionMessage,
       emotionOptions, weekDays, calendarDays, currentYearMonth,
-      handleEmotionSelect, dayCellClass, emotionColor, goBack,
+      handleEmotionSelect, dayCellClass, emotionColor, goBack, changeMonth,
     }
   },
 }
@@ -453,6 +468,32 @@ export default {
 }
 
 .calendar_month { font-size: 0.95rem; color: var(--color-text-light); }
+
+.month_nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.month_btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-bg-card);
+  color: var(--color-primary);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.month_btn:active {
+  background: var(--color-bg-warm);
+}
 
 .calendar_grid {
   display: grid;

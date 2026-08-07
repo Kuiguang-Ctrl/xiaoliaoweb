@@ -99,6 +99,7 @@ import QuickSigninModal from '@/components/QuickSigninModal.vue'
 import BottomNav from '@/components/BottomNav.vue'
 import Icon from '@/components/Icon.vue'
 import CarouselBanner from '@/components/CarouselBanner.vue'
+import { checkTodaySignin } from '@/api/signin'
 import img1 from '@/assets/1.png'
 import img2 from '@/assets/2.png'
 import img3 from '@/assets/3.png'
@@ -176,19 +177,12 @@ export default {
       todaySigninStatus.emotion = emotion
     }
 
-    const refreshSigninStatus = () => {
+    const refreshSigninStatus = async () => {
       try {
-        const data = JSON.parse(localStorage.getItem('hui_signin_data') || '{}')
-        const now = new Date()
-        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-        if (data.history && data.history[dateStr]) {
-          todaySigninStatus.signed = true
-          todaySigninStatus.emotion = data.history[dateStr].emotion
-          streakDays.value = data.streak || 0
-        } else {
-          todaySigninStatus.signed = false
-          todaySigninStatus.emotion = null
-        }
+        const res = await checkTodaySignin()
+        todaySigninStatus.signed = res.data.signed
+        todaySigninStatus.emotion = res.data.emotion
+        streakDays.value = res.data.streak || 0
       } catch {
         todaySigninStatus.signed = false
         todaySigninStatus.emotion = null

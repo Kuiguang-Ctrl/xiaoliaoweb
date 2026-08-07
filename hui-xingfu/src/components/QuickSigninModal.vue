@@ -56,8 +56,8 @@
 <script>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import Icon from './Icon.vue'
-
-const STORAGE_KEY = 'hui_signin_data'
+import { speakEncourage, speakEmotionFeedback } from '@/utils/tts'
+import { doSignin } from '@/api/signin'
 
 const emotionOptions = [
   { value: 'sunny', iconName: 'sunny', color: '#F0C75E', label: '开心' },
@@ -66,41 +66,6 @@ const emotionOptions = [
   { value: 'rainy', iconName: 'rainy', color: '#5A7886', label: '有点低落' },
   { value: 'stormy', iconName: 'stormy', color: '#6B5B7A', label: '不开心' },
 ]
-
-function getSigninData() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
-  } catch { return {} }
-}
-
-function setSigninData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-}
-
-export function saveSignin(emotion) {
-  const data = getSigninData()
-  if (!data.history) data.history = {}
-  if (!data.streak) data.streak = 0
-
-  const today = new Date()
-  const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-
-  // 计算连续签到
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  const yestStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`
-
-  if (data.lastDate === yestStr) {
-    data.streak += 1
-  } else if (data.lastDate !== dateStr) {
-    data.streak = 1
-  }
-  data.lastDate = dateStr
-
-  data.history[dateStr] = { date: dateStr, emotion }
-  setSigninData(data)
-  return { streak: data.streak, emotion }
-}
 
 export default {
   name: 'QuickSigninModal',
@@ -117,17 +82,34 @@ export default {
     const selectedEmotion = ref(null)
     const isSigning = ref(false)
 
-    const handleQuickSignin = () => {
+    const handleQuickSignin = async () => {
       if (isSigning.value) return
       isSigning.value = true
 
       const emotion = selectedEmotion.value || 'sunny'
-      const result = saveSignin(emotion)
+      let result = { streak: 0, emotion }
+
+      try {
+        const res = await doSignin(emotion)
+        result = { streak: res.data.streak, emotion }
+      } catch (e) {
+        // 后端失败不阻塞界面
+        console.warn('签到失败:', e)
+      }
 
       emit('signed', result)
       close()
 
       isSigning.value = false
+
+      // 语音播报：先鼓励语，再情绪反馈（串行，避免互相打断）
+      speakSequence(emotion)
+    }
+
+    /** 串行播报签到反馈语音 */
+    const speakSequence = async (emotion) => {
+      await speakEncourage()
+      await speakEmotionFeedback(emotion)
     }
 
     const close = () => {
