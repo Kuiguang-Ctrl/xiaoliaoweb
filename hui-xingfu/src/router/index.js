@@ -9,6 +9,7 @@ import FindRule from '@/games/FindRule.vue'
 import WordGame from '@/games/WordGame.vue'
 import FindDiff from '@/games/FindDiff.vue'
 import profile from '../views/profile/profile.vue'
+import chat from '../views/chat/chat.vue'
 
 const routes = [
   {
@@ -61,6 +62,11 @@ const routes = [
     path: '/profile',
     name: 'Profile',
     component: profile,
+  },
+  {
+    path: '/chat',
+    name: 'Chat',
+    component: chat,
   },
 ]
 

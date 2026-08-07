@@ -23,14 +23,6 @@
         />
         <span class="tab_label">{{ tab.label }}</span>
       </button>
-
-      <!-- 小辽 AI 占位提示 -->
-      <transition name="toast_fade">
-        <div v-if="showAiToast" class="ai_toast" role="status" aria-live="polite">
-          <Icon name="service" :size="20" color="var(--color-primary-deep)" aria-hidden="true" />
-          <span>小辽 AI 助手即将上线</span>
-        </div>
-      </transition>
     </footer>
   </teleport>
 </template>
@@ -43,6 +35,7 @@ import { BOTTOM_TABS } from '@/views/home_page/home_config'
 
 const TAB_ROUTE_MAP = {
   home: '/',
+  ai: '/chat',
   profile: '/profile',
 }
 
@@ -55,29 +48,19 @@ export default {
     const router = useRouter()
     const route = useRoute()
     const tabs = BOTTOM_TABS
-    const showAiToast = ref(false)
-    let aiTimer = null
 
     const isActive = (key) => {
       return route.path === TAB_ROUTE_MAP[key]
     }
 
     const handleClick = (key) => {
-      if (key === 'ai') {
-        showAiToast.value = true
-        if (aiTimer) clearTimeout(aiTimer)
-        aiTimer = setTimeout(() => {
-          showAiToast.value = false
-        }, 1800)
-        return
-      }
       const target = TAB_ROUTE_MAP[key]
       if (!target) return
       if (route.path === target) return
       router.push(target)
     }
 
-    return { tabs, isActive, handleClick, showAiToast }
+    return { tabs, isActive, handleClick }
   },
 }
 </script>

@@ -9,6 +9,21 @@ export const isSpeechSupported = () => {
   return typeof window !== 'undefined' && 'speechSynthesis' in window
 }
 
+/** 挑选更自然的中文语音（优先神经语音，其次旧语音） */
+function pickChineseVoice() {
+  const voices = window.speechSynthesis.getVoices()
+  if (!voices || voices.length === 0) return null
+  const chinese = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith('zh'))
+  if (chinese.length === 0) return null
+  // 微软神经中文语音较自然（晓晓/云扬/云希）；旧语音（Huihui/Yaoyao）较机械
+  const prefer = ['Xiaoxiao', 'Yunyang', 'Yunxi', 'Xiaoyi', 'Huihui', 'Yaoyao', 'Kangkang']
+  for (const name of prefer) {
+    const v = chinese.find((v) => v.name && v.name.includes(name))
+    if (v) return v
+  }
+  return chinese[0]
+}
+
 /**
  * 语音播报
  * @param {string} text - 播报文本
@@ -37,6 +52,13 @@ export const speak = (text, options = {}) => {
     utterance.rate = rate
     utterance.pitch = pitch
     utterance.volume = volume
+
+    // 选择更自然的中文语音（若语音列表已加载）
+    const voice = pickChineseVoice()
+    if (voice) {
+      utterance.voice = voice
+      utterance.lang = voice.lang
+    }
 
     utterance.onend = resolve
     utterance.onerror = (e) => {
