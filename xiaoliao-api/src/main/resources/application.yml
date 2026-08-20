@@ -21,6 +21,8 @@ xiaoliao:
     connect-timeout: 3s
     # Python 引擎双模型+知识库推理约 10-15s，留足余量
     read-timeout: 60s
+    # 新版 AI 引擎 Bearer Token 鉴权（与引擎 .env 的 API_TOKEN 一致）
+    api-token: ${AI_API_TOKEN:}
   jwt:
     secret: ${XIAOLIAO_JWT_SECRET:xiaoliao-dev-secret-change-in-production-2026}
     expire-hours: 168
@@ -28,6 +30,10 @@ xiaoliao:
     # 鉴权开关：true=正式校验 token；false=跳过（仅联调用，配 mock-user-id）
     enabled: true
     mock-user-id: ""
+  # 微信小程序登录（wx.login code → jscode2session → openid）
+  wx:
+    appid: ${WX_APPID:}
+    secret: ${WX_SECRET:}
 
 # MyBatis-Plus（M2 实体逻辑删除/自动填充依赖）
 mybatis-plus:
@@ -63,5 +69,12 @@ wecom:
   aes-key: ${WECOM_AES_KEY:}
   kf:
     open-kfid: ${WECOM_KF_OPEN_KFID:}
+  group-reminder:
+    enabled: ${WECOM_GROUP_REMINDER_ENABLED:false}
+    webhook: ${WECOM_GROUP_REMINDER_WEBHOOK:}
+    cron: ${WECOM_GROUP_REMINDER_CRON:0 0 9 * * ?}
+    content: ${WECOM_GROUP_REMINDER_CONTENT:现在是九点，该打卡啦～ 需要帮助可以点击群里的「客服助理」}
+    webhook-content: ${WECOM_GROUP_REMINDER_WEBHOOK_CONTENT:}
+    window-hours: ${WECOM_GROUP_REMINDER_WINDOW_HOURS:48}
   miniprogram:
     appid: ${WECOM_MINIPROGRAM_APPID:}

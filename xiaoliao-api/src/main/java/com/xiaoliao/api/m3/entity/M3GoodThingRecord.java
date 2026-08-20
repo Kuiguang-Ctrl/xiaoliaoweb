@@ -1,4 +1,4 @@
-package com.xiaoliao.api.m2.entity;
+package com.xiaoliao.api.m3.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -6,36 +6,26 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * 游戏成就表
- *
- * @author m2
- * @since 2026-08-03
+ * M3 三件好事记录
  */
 @Data
-@TableName("m2_user_game_achievement")
-public class M2UserGameAchievement {
+@TableName("m3_good_thing_records")
+public class M3GoodThingRecord {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
     private String userId;
 
-    /** 关联单局记录 id */
-    private Long recordId;
+    /** 好事内容（纯文本，语音转文字二期接入） */
+    private String content;
 
-    private Long gameId;
-
-    /** 本局星级 */
-    private Integer star;
-
-    /** 成就文案 */
-    private String achievementDesc;
-
-    /** 0 未分享 1 已分享社区 */
-    private Integer shareStatus;
+    /** 记录日期 */
+    private LocalDate recordDate;
 
     private LocalDateTime createTime;
 

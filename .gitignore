@@ -21,3 +21,6 @@ Thumbs.db
 # 日志
 logs/
 *.log
+
+# IDE 备份
+.idea.bak/

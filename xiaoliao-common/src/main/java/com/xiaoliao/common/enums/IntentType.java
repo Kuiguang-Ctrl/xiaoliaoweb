@@ -12,19 +12,19 @@ public enum IntentType {
     CHAT("chat", "纯聊天", null),
 
     /** 每日签到/记录情绪 */
-    CHECKIN("checkin", "签到情绪", "pages/checkin/index"),
+    CHECKIN("checkin", "签到情绪", "pages/checkin/checkin"),
 
     /** 脑力游戏 */
-    GAME("game", "脑力游戏", "pages/games/index"),
+    GAME("game", "脑力游戏", "pages/game/gameList"),
 
-    /** 积极心理练习 */
-    EXERCISE("exercise", "心理练习", "pages/exercise/index"),
+    /** 积极心理练习（M3 已上线，指到三件好事主页） */
+    EXERCISE("exercise", "心理练习", "pages/m3/goodthings"),
 
-    /** 心理测评 */
-    ASSESSMENT("assessment", "心理测评", "pages/assessment/index"),
+    /** 心理测评（未上线，指到占位页） */
+    ASSESSMENT("assessment", "心理测评", "pages/placeholder/placeholder"),
 
-    /** 社区 */
-    COMMUNITY("community", "社区", "pages/community/index"),
+    /** 社区（未上线，指到占位页） */
+    COMMUNITY("community", "社区", "pages/placeholder/placeholder"),
 
     /** 未知，兜底走聊天 */
     UNKNOWN("unknown", "未知", null);

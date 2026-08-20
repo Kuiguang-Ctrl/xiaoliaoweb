@@ -2,6 +2,8 @@ package com.xiaoliao.api.auth;
 
 import com.xiaoliao.api.auth.dto.VerifyTokenRequest;
 import com.xiaoliao.api.auth.dto.VerifyTokenResponse;
+import com.xiaoliao.api.auth.dto.WxLoginRequest;
+import com.xiaoliao.api.auth.dto.WxLoginResponse;
 import com.xiaoliao.api.user.entity.User;
 import com.xiaoliao.api.user.UserService;
 import com.xiaoliao.api.util.TokenUtil;
@@ -29,6 +31,33 @@ public class AuthController {
 
     private final TokenUtil tokenUtil;
     private final UserService userService;
+    private final WxAuthService wxAuthService;
+
+    /**
+     * 微信小程序无感登录（直开小程序时调用）
+     * <p>
+     * 小程序 wx.login() 拿到临时 code → 换 openid → 查/建用户 → 返回 JWT。
+     * 全程无感，老人直接打开就能用。
+     */
+    @Operation(summary = "微信无感登录", description = "小程序 wx.login() 拿 code 换 openid，自动注册并返回 JWT")
+    @PostMapping("/wx-login")
+    public Result<WxLoginResponse> wxLogin(@Valid @RequestBody WxLoginRequest request) {
+        String openid = wxAuthService.codeToOpenid(request.getCode());
+        if (openid == null) {
+            log.warn("wx-login 换 openid 失败: code={}", request.getCode());
+            return Result.fail(401, "微信登录失败，请重试");
+        }
+
+        User user = userService.getOrCreateByWechatOpenid(openid);
+        String token = tokenUtil.generateToken(user.getId());
+
+        log.info("微信无感登录成功: userId={}, nickname={}", user.getId(), user.getNickname());
+        return Result.ok(WxLoginResponse.builder()
+                .token(token)
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .build());
+    }
 
     /**
      * 验证 JWT token，返回用户信息

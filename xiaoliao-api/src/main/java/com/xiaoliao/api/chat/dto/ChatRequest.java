@@ -20,6 +20,9 @@ public class ChatRequest {
     private String userId;
     private String message;
 
+    /** 会话ID：同一会话只弹一次推荐，前端每次进入聊天页生成一个即可 */
+    private String sessionId;
+
     /** 历史消息，Python 端要求必须为数组（不能为 null），不传时给空列表 */
     @Builder.Default
     private List<Map<String, String>> conversationHistory = new ArrayList<>();

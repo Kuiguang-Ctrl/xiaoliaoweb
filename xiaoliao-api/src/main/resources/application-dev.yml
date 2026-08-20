@@ -1,9 +1,17 @@
 # ─── 开发环境 ───
-# 开发时跳过鉴权，固定用 mock 用户（联调方便；正式环境用 application.yml 的 enabled:true）
+# 登录策略：真实身份来自企微客服（external_userid → JWT → 小程序卡片 token），小程序侧不做 wx.login。
+# 开发时关闭鉴权，直开小程序用 mock 用户即可全功能联调；生产（application.yml）保持开启走企微卡片 token。
 xiaoliao:
   auth:
     enabled: false
     mock-user-id: 7764978f-9019-4b2f-b6b1-11862c1a5528
+  wx:
+    # 小程序测试号（预留：将来若要启用 wx.login 直开登录再使用）
+    appid: wx4e429afa4c177a40
+    secret: 27048287aadd42a9cc247c39a07587b0
+  ai:
+    # 本地 AI 引擎 .env 里的 API_TOKEN（生产用环境变量 AI_API_TOKEN 注入）
+    api-token: f5y2I6nxDg22K3yEHEU32dLqLX3AQILzMOSLZ4Yx4m77zERYRaXMH1FFBZQQaunY
 
 spring:
   datasource:
@@ -26,3 +34,24 @@ logging:
   level:
     com.xiaoliao: DEBUG
     me.chanjar.weixin: DEBUG
+
+# ---- 企业微信（微信客服）----
+wecom:
+  corp-id: wwedae3783fd87e8eb
+  secret: 6c-XqDo0QMHBYEJJBqVG9XWa-6W83ERJbwnQAi7T8Ts
+  token: xiaoliao2026
+  aes-key: fVlox8auvnLR1M2z1gn8kVAjb5Ay78sZvp8nkFifwKA
+  kf:
+    open-kfid: wkCP0EbQAA3t2kcyOYR3--M3EGppSzrw
+  poll:
+    enabled: true
+    interval-ms: 10000
+  group-reminder:
+    enabled: true
+    webhook: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=b45218d3-0421-41e1-ad7d-7e26c7a42ceb
+    cron: 0 0 9 * * ?
+    content: 现在是九点，该打卡啦～ 需要帮助可以点击群里的「客服助理」
+    webhook-content: 现在是九点，该打卡啦～ 需要帮助可点击 [客服助理](https://work.weixin.qq.com/kfid/kfc46eff57a06e15e48)
+    window-hours: 48
+  miniprogram:
+    appid: ''

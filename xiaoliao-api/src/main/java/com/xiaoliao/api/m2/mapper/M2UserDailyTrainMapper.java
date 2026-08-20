@@ -20,7 +20,7 @@ public interface M2UserDailyTrainMapper extends BaseMapper<M2UserDailyTrain> {
               AND deleted = 0
             LIMIT 1
             """)
-    M2UserDailyTrain selectByUserAndDate(@Param("userId") Long userId, @Param("trainDate") LocalDate trainDate);
+    M2UserDailyTrain selectByUserAndDate(@Param("userId") String userId, @Param("trainDate") LocalDate trainDate);
 
     @Insert("""
             INSERT INTO m2_user_daily_train

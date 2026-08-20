@@ -1,4 +1,4 @@
-package com.xiaoliao.api.m2.entity;
+package com.xiaoliao.api.m3.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -9,33 +9,28 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 游戏成就表
- *
- * @author m2
- * @since 2026-08-03
+ * M3 感恩留言
  */
 @Data
-@TableName("m2_user_game_achievement")
-public class M2UserGameAchievement {
+@TableName("m3_gratitude_notes")
+public class M3GratitudeNote {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
     private String userId;
 
-    /** 关联单局记录 id */
-    private Long recordId;
+    /** 感谢对象：老伴/女儿/儿子/老友/自定义 */
+    private String targetName;
 
-    private Long gameId;
+    /** 留言内容 */
+    private String content;
 
-    /** 本局星级 */
-    private Integer star;
+    /** 语音留言 URL（本期预留） */
+    private String voiceUrl;
 
-    /** 成就文案 */
-    private String achievementDesc;
-
-    /** 0 未分享 1 已分享社区 */
-    private Integer shareStatus;
+    /** 是否已分享给家人 0未分享 1已分享（M8 接入） */
+    private Integer shared;
 
     private LocalDateTime createTime;
 

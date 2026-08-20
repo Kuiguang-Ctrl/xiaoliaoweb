@@ -27,4 +27,7 @@ public class ChatResponse {
 
     /** RAG 检索到的上下文列表（每项含 chunk_id / heading / score） */
     private List<Map<String, Object>> retrievedContexts;
+
+    /** AI 意图推荐（引擎 /v1/intent/recommend 返回）：recommended=true 时前端弹窗跳转；引擎未实现时为 null */
+    private Map<String, Object> recommendation;
 }

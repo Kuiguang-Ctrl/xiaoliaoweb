@@ -49,7 +49,7 @@ public class M2GameServiceImpl implements M2GameService {
     // ==================== 列表 ====================
 
     @Override
-    public List<GameListVO> listGames(Long userId) {
+    public List<GameListVO> listGames(String userId) {
         List<M2GameInfo> games = gameInfoMapper.selectList(
                 new LambdaQueryWrapper<M2GameInfo>()
                         .eq(M2GameInfo::getIsEnable, M2Constants.ENABLE)
@@ -82,7 +82,7 @@ public class M2GameServiceImpl implements M2GameService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public GameStartVO start(Long userId, Long gameId) {
+    public GameStartVO start(String userId, Long gameId) {
         M2GameInfo game = requireEnabledGame(gameId);
 
         M2UserGameRecord playing = recordMapper.selectOne(
@@ -135,7 +135,7 @@ public class M2GameServiceImpl implements M2GameService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public GameFinishResultVO finish(Long userId, GameFinishVO vo) {
+    public GameFinishResultVO finish(String userId, GameFinishVO vo) {
         M2UserGameRecord record = recordMapper.selectById(vo.getRecordId());
         if (record == null || !Objects.equals(record.getUserId(), userId)) {
             throw new IllegalArgumentException("对局记录不存在");
@@ -143,8 +143,17 @@ public class M2GameServiceImpl implements M2GameService {
         if (!Objects.equals(record.getGameStatus(), GameStatusEnum.PLAYING.getValue())) {
             throw new IllegalArgumentException("该局已结束，请勿重复提交");
         }
-        if (vo.getCorrectQuestion() + vo.getWrongQuestion() > vo.getTotalQuestion()) {
-            throw new IllegalArgumentException("答对+答错不能超过总题数");
+        // 校验答题数量合法范围。
+        // 注意：翻牌/找不同/分类等玩法中"答错"是额外尝试次数，可超过总题数（如 4 对配对翻了 5 次错的），
+        // 因此这里只校验正确数不超过总题数，不校验 correct+wrong<=total。
+        if (vo.getTotalQuestion() <= 0) {
+            throw new IllegalArgumentException("总题数必须大于 0");
+        }
+        if (vo.getCorrectQuestion() < 0 || vo.getWrongQuestion() < 0) {
+            throw new IllegalArgumentException("答题数量不能为负");
+        }
+        if (vo.getCorrectQuestion() > vo.getTotalQuestion()) {
+            throw new IllegalArgumentException("答对数不能超过总题数");
         }
 
         M2GameInfo game = requireEnabledGame(record.getGameId());
@@ -209,7 +218,7 @@ public class M2GameServiceImpl implements M2GameService {
     // ==================== 日汇总查询 ====================
 
     @Override
-    public DailyTrainVO dailyTrain(Long userId, String dateStr) {
+    public DailyTrainVO dailyTrain(String userId, String dateStr) {
         LocalDate date;
         if (StrUtil.isBlank(dateStr)) {
             date = LocalDate.now();
@@ -286,7 +295,7 @@ public class M2GameServiceImpl implements M2GameService {
             return Math.min(2, max);
         }
         if (passRate >= 50) {
-            return Math.min(1, max);
+            return 1;
         }
         return 0;
     }
@@ -312,7 +321,7 @@ public class M2GameServiceImpl implements M2GameService {
 
     // ==================== 日汇总 & 均衡度 ====================
 
-    private void upsertDailyTrain(Long userId, M2UserGameRecord record, boolean finished) {
+    private void upsertDailyTrain(String userId, M2UserGameRecord record, boolean finished) {
         LocalDate date = record.getPlayDate();
         M2UserDailyTrain daily = dailyTrainMapper.selectByUserAndDate(userId, date);
 
@@ -435,7 +444,7 @@ public class M2GameServiceImpl implements M2GameService {
 
     // ==================== 成就 ====================
 
-    private Long createAchievement(Long userId, M2UserGameRecord record, M2GameInfo game, int star) {
+    private Long createAchievement(String userId, M2UserGameRecord record, M2GameInfo game, int star) {
         M2UserGameAchievement a = new M2UserGameAchievement();
         a.setUserId(userId);
         a.setRecordId(record.getId());
@@ -449,7 +458,7 @@ public class M2GameServiceImpl implements M2GameService {
 
     // ==================== 查询辅助 ====================
 
-    private int resolveRecommendLevelNo(Long userId, Long gameId) {
+    private int resolveRecommendLevelNo(String userId, Long gameId) {
         M2UserGameRecord latest = recordMapper.selectLatestFinished(userId, gameId);
         if (latest != null && latest.getNextLevelNo() != null) {
             return latest.getNextLevelNo();

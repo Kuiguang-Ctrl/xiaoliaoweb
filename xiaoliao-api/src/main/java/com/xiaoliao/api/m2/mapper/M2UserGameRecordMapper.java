@@ -24,5 +24,5 @@ public interface M2UserGameRecordMapper extends BaseMapper<M2UserGameRecord> {
             ORDER BY end_time DESC
             LIMIT 1
             """)
-    M2UserGameRecord selectLatestFinished(@Param("userId") Long userId, @Param("gameId") Long gameId);
+    M2UserGameRecord selectLatestFinished(@Param("userId") String userId, @Param("gameId") Long gameId);
 }

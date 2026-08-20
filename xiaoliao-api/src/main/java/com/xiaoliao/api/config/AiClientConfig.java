@@ -25,6 +25,9 @@ public class AiClientConfig {
     @Value("${xiaoliao.ai.read-timeout:15s}")
     private Duration readTimeout;
 
+    @Value("${xiaoliao.ai.api-token:}")
+    private String apiToken;
+
     @Bean
     public RestClient aiRestClient() {
         ClientHttpRequestFactory factory = ClientHttpRequestFactories.get(
@@ -32,9 +35,13 @@ public class AiClientConfig {
                         .withConnectTimeout(connectTimeout)
                         .withReadTimeout(readTimeout)
         );
-        return RestClient.builder()
+        RestClient.Builder builder = RestClient.builder()
                 .baseUrl(aiBaseUrl)
-                .requestFactory(factory)
-                .build();
+                .requestFactory(factory);
+        // 新版 AI 引擎要求 Bearer Token 鉴权（与引擎 .env 的 API_TOKEN 一致）
+        if (apiToken != null && !apiToken.isBlank()) {
+            builder.defaultHeader("Authorization", "Bearer " + apiToken);
+        }
+        return builder.build();
     }
 }
