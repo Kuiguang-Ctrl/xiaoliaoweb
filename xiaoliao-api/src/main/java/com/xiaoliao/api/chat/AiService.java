@@ -2,6 +2,7 @@ package com.xiaoliao.api.chat;
 
 import com.xiaoliao.api.chat.dto.ChatRequest;
 import com.xiaoliao.api.chat.dto.ChatResponse;
+import com.xiaoliao.api.metrics.ApiMetric;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -37,7 +38,7 @@ public class AiService {
      * @param conversationHistory 历史消息，按时间顺序，每项 {role: user/assistant/system, content}
      */
     public ChatResponse chat(String userId, String message, List<Map<String, String>> conversationHistory) {
-        return chat(userId, message, conversationHistory, null);
+        return chat(userId, message, conversationHistory, null, null);
     }
 
     /**
@@ -47,12 +48,28 @@ public class AiService {
      * @param sessionId           会话ID：同一会话只弹一次推荐，可为 null
      */
     public ChatResponse chat(String userId, String message, List<Map<String, String>> conversationHistory, String sessionId) {
-        ChatRequest request = ChatRequest.builder()
+        return chat(userId, message, conversationHistory, sessionId, null);
+    }
+
+    /**
+     * 发送对话请求到 Python AI 引擎（带历史、会话ID、图片，支持多轮）
+     *
+     * @param conversationHistory 历史消息，按时间顺序，每项 {role: user/assistant/system, content}
+     * @param sessionId           会话ID：同一会话只弹一次推荐，可为 null
+     * @param images              本轮图片 URL 列表（引擎支持多模态后生效；为空时不传该字段）
+     */
+    @ApiMetric("ai.engine.chat")
+    public ChatResponse chat(String userId, String message, List<Map<String, String>> conversationHistory,
+                             String sessionId, List<String> images) {
+        ChatRequest.ChatRequestBuilder builder = ChatRequest.builder()
                 .userId(userId)
                 .message(message)
                 .sessionId(sessionId)
-                .conversationHistory(conversationHistory != null ? conversationHistory : new ArrayList<>())
-                .build();
+                .conversationHistory(conversationHistory != null ? conversationHistory : new ArrayList<>());
+        if (images != null && !images.isEmpty()) {
+            builder.images(images);
+        }
+        ChatRequest request = builder.build();
 
         try {
             long start = System.currentTimeMillis();

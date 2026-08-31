@@ -26,12 +26,14 @@ import com.xiaoliao.api.m3.vo.GoodThingTodayVO;
 import com.xiaoliao.api.m3.vo.GratitudeVO;
 import com.xiaoliao.api.m3.vo.WeeklySummaryVO;
 import com.xiaoliao.api.user.UserService;
+import com.xiaoliao.api.util.RedisLock;
 import com.xiaoliao.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -67,8 +69,11 @@ public class M3ServiceImpl implements M3Service {
     private final M2UserGameAchievementMapper gameAchievementMapper;
     private final CheckinMapper checkinMapper;
     private final UserService userService;
+    private final RedisLock redisLock;
 
     private static final int DAILY_LIMIT = 3;
+    private static final String GOOD_THING_LOCK_PREFIX = "m3:good:lock:";
+    private static final Duration GOOD_THING_LOCK_TIMEOUT = Duration.ofSeconds(30);
     private static final String SOURCE_GAME = "game";
     private static final String SOURCE_MILESTONE = "milestone";
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -81,30 +86,50 @@ public class M3ServiceImpl implements M3Service {
         requireUser(userId);
         LocalDate today = LocalDate.now();
 
-        long todayCount = goodThingMapper.selectCount(
-                new LambdaQueryWrapper<M3GoodThingRecord>()
-                        .eq(M3GoodThingRecord::getUserId, userId)
-                        .eq(M3GoodThingRecord::getRecordDate, today));
-        if (todayCount >= DAILY_LIMIT) {
-            throw new BusinessException(409, "今天已经记满三件好事啦，明天再来记录吧～");
+        // 分布式锁串行化「查询 + 插入」，防止并发提交突破每天 3 条上限
+        String lockKey = GOOD_THING_LOCK_PREFIX + userId + ":" + today.format(DAY_FMT);
+        String requestId = null;
+        boolean redisUnavailable = false;
+        try {
+            requestId = redisLock.tryLock(lockKey, GOOD_THING_LOCK_TIMEOUT);
+        } catch (Exception e) {
+            redisUnavailable = true;
+            log.warn("Redis 不可用，跳过分布式锁直接执行: {}", e.getMessage());
+        }
+        if (requestId == null && !redisUnavailable) {
+            throw new BusinessException(409, "提交太频繁啦，稍等一下再试试～");
         }
 
-        M3GoodThingRecord record = new M3GoodThingRecord();
-        record.setUserId(userId);
-        record.setContent(request.getContent().trim());
-        record.setRecordDate(today);
-        record.setCreateTime(LocalDateTime.now());
-        record.setUpdateTime(LocalDateTime.now());
-        goodThingMapper.insert(record);
-        log.info("好事记录成功: userId={}, id={}", userId, record.getId());
+        try {
+            long todayCount = goodThingMapper.selectCount(
+                    new LambdaQueryWrapper<M3GoodThingRecord>()
+                            .eq(M3GoodThingRecord::getUserId, userId)
+                            .eq(M3GoodThingRecord::getRecordDate, today));
+            if (todayCount >= DAILY_LIMIT) {
+                throw new BusinessException(409, "今天已经记满三件好事啦，明天再来记录吧～");
+            }
 
-        GoodThingSubmitVO vo = new GoodThingSubmitVO();
-        vo.setId(record.getId());
-        vo.setContent(record.getContent());
-        vo.setRecordDate(today.format(DAY_FMT));
-        vo.setTodayCount((int) todayCount + 1);
-        vo.setEncourageMsg(encourageForToday(vo.getTodayCount()));
-        return vo;
+            M3GoodThingRecord record = new M3GoodThingRecord();
+            record.setUserId(userId);
+            record.setContent(request.getContent().trim());
+            record.setRecordDate(today);
+            record.setCreateTime(LocalDateTime.now());
+            record.setUpdateTime(LocalDateTime.now());
+            goodThingMapper.insert(record);
+            log.info("好事记录成功: userId={}, id={}", userId, record.getId());
+
+            GoodThingSubmitVO vo = new GoodThingSubmitVO();
+            vo.setId(record.getId());
+            vo.setContent(record.getContent());
+            vo.setRecordDate(today.format(DAY_FMT));
+            vo.setTodayCount((int) todayCount + 1);
+            vo.setEncourageMsg(encourageForToday(vo.getTodayCount()));
+            return vo;
+        } finally {
+            if (requestId != null) {
+                redisLock.unlock(lockKey, requestId);
+            }
+        }
     }
 
     @Override

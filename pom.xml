@@ -39,6 +39,9 @@
         <hutool.version>5.8.27</hutool.version>
         <lombok.version>1.18.32</lombok.version>
         <jackson.version>2.17.0</jackson.version>
+
+        <!-- 单元测试覆盖率 -->
+        <jacoco.version>0.8.12</jacoco.version>
         <jjwt.version>0.12.6</jjwt.version>
 
         <!-- Knife4j (OpenAPI3 + Swagger) -->
@@ -166,6 +169,22 @@
                             </exclude>
                         </excludes>
                     </configuration>
+                </plugin>
+                <!-- JUnit 5 测试运行器（Maven 默认 surefire 2.x 不支持 JUnit5） -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                    <configuration>
+                        <!-- 延迟替换：消费 Jacoco prepare-agent 注入的 argLine（javaagent） -->
+                        <argLine>@{argLine}</argLine>
+                    </configuration>
+                </plugin>
+                <!-- 单元测试覆盖率 -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>

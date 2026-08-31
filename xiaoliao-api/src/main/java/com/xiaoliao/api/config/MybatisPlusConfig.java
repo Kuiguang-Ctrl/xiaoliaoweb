@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * MyBatis-Plus 配置 — Mapper 扫描 + 分页插件
  */
 @Configuration
-@MapperScan({"com.xiaoliao.**.repository", "com.xiaoliao.api.m2.mapper", "com.xiaoliao.api.m3.mapper"})
+@MapperScan({"com.xiaoliao.**.repository", "com.xiaoliao.api.m2.mapper", "com.xiaoliao.api.m3.mapper", "com.xiaoliao.api.m4.mapper"})
 public class MybatisPlusConfig {
 
     @Bean

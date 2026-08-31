@@ -23,6 +23,17 @@ xiaoliao:
     read-timeout: 60s
     # 新版 AI 引擎 Bearer Token 鉴权（与引擎 .env 的 API_TOKEN 一致）
     api-token: ${AI_API_TOKEN:}
+  security:
+    # 敏感字段加密密钥（生产必须用环境变量 XIAOLIAO_DATA_KEY 覆盖默认值）
+    data-key: ${XIAOLIAO_DATA_KEY:xiaoliao-dev-data-key-2026}
+  upload:
+    # 图片上传本地磁盘目录（生产用环境变量 XIAOLIAO_UPLOAD_DIR 覆盖）
+    dir: ${XIAOLIAO_UPLOAD_DIR:./uploads}
+    # 图片访问基础地址（生产替换为正式 https 域名）
+    base-url: ${XIAOLIAO_UPLOAD_BASE_URL:http://localhost:8080}
+  pexels:
+    # Pexels 图库 API Key（免费申请 https://www.pexels.com/api/；为空时配图只走本地素材库）
+    key: ${XIAOLIAO_PEXELS_KEY:}
   jwt:
     secret: ${XIAOLIAO_JWT_SECRET:xiaoliao-dev-secret-change-in-production-2026}
     expire-hours: 168
@@ -54,6 +65,16 @@ springdoc:
     path: /v3/api-docs
     enabled: true
   packages-to-scan: com.xiaoliao.api
+
+# ─── 可观测性（Actuator + Prometheus，访问 /actuator/prometheus）───
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: xiaoliao-api
 
 # ─── Knife4j 配置 ───
 knife4j:

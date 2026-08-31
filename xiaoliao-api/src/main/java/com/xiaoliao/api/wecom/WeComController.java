@@ -1,6 +1,7 @@
 package com.xiaoliao.api.wecom;
 
 import com.xiaoliao.api.wecom.WeComAsyncHandler;
+import com.xiaoliao.api.metrics.ApiMetric;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +51,8 @@ public class WeComController {
      * 企微要求 5 秒内响应，否则会重试
      */
     @Operation(summary = "接收企微用户消息", description = "企微用户发消息回调，解析后异步调 AI 回复，立即返回 success")
-@PostMapping(value = {"/wecom/callback", "/wxcallback"}, produces = "text/plain")
+    @PostMapping(value = {"/wecom/callback", "/wxcallback"}, produces = "text/plain")
+    @ApiMetric("wecom.callback")
     public String callback(@RequestBody String xmlBody,
                            @RequestParam("msg_signature") String signature,
                            @RequestParam("timestamp") String timestamp,

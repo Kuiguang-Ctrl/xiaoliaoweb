@@ -6,6 +6,7 @@ import com.xiaoliao.api.checkin.dto.CheckinRequest;
 import com.xiaoliao.api.checkin.dto.CheckinResultVO;
 import com.xiaoliao.api.checkin.dto.TodayVO;
 import com.xiaoliao.api.checkin.CheckinService;
+import com.xiaoliao.api.metrics.ApiMetric;
 import com.xiaoliao.common.dto.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,6 +28,7 @@ public class CheckinController {
      */
     @Operation(summary = "快捷签到", description = "小程序首页点情绪按钮即完成签到，mood 可空")
     @PostMapping
+    @ApiMetric("checkin.check")
     public Result<CheckinResultVO> checkIn(@RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
                                            @RequestBody CheckinRequest request) {
         return Result.ok("签到成功", checkinService.checkIn(userId, request));
@@ -37,6 +39,7 @@ public class CheckinController {
      */
     @Operation(summary = "今日状态", description = "小程序首页加载：日期/星期/季节/问候/是否已签/连续天数")
     @GetMapping("/today")
+    @ApiMetric("checkin.today")
     public Result<TodayVO> today(@RequestAttribute(AuthContext.USER_ID_ATTR) String userId) {
         return Result.ok(checkinService.today(userId));
     }

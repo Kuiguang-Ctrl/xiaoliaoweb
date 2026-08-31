@@ -9,6 +9,12 @@ xiaoliao:
     # 小程序测试号（预留：将来若要启用 wx.login 直开登录再使用）
     appid: wx4e429afa4c177a40
     secret: 27048287aadd42a9cc247c39a07587b0
+  security:
+    # 敏感字段加密密钥（dev 固定值；生产用环境变量 XIAOLIAO_DATA_KEY）
+    data-key: xiaoliao-dev-data-key-2026
+  pexels:
+    # Pexels 图库 API Key（dev 固定值；生产用环境变量 XIAOLIAO_PEXELS_KEY）
+    key: iIZKWKhDP2KRkvhjqja7xKugWl1GggoDW5uRSYqVqMRFXXKSGhmWe1BY
   ai:
     # 本地 AI 引擎 .env 里的 API_TOKEN（生产用环境变量 AI_API_TOKEN 注入）
     api-token: f5y2I6nxDg22K3yEHEU32dLqLX3AQILzMOSLZ4Yx4m77zERYRaXMH1FFBZQQaunY

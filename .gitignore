@@ -22,5 +22,11 @@ Thumbs.db
 logs/
 *.log
 
+# 覆盖率数据文件
+*.exec
+
 # IDE 备份
 .idea.bak/
+
+# 运行时上传的图片（不入库）
+uploads/
