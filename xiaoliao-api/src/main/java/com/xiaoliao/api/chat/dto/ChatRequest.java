@@ -1,5 +1,6 @@
 package com.xiaoliao.api.chat.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ import java.util.Map;
 /**
  * 发给 Python AI 引擎的请求
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 @Builder
 @NoArgsConstructor

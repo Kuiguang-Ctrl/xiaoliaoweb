@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时光花园 · 我的花园</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"><span id="sbTime">09:41</span><span>🔋 ▮▮▮</span></div>
+  <div class="notch"></div>
+
+  <div class="screen">
+    <div class="page-head">
+      <a class="ph-back" href="../时光花园_demo.html" title="回对话">‹</a>
+      <div class="ph-title">🌤 我的花园</div>
+      <button class="ph-gear" onclick="location.reload()" title="刷新">🔄</button>
+    </div>
+
+    <div class="page-body">
+      <div class="greet">🌤 我的花园</div>
+      <div class="sub" id="gardenSub">正在从后端取花园数据…</div>
+
+      <div class="garden-scene" id="gardenScene">
+        <div class="gs-sun">☀️</div>
+        <div class="gs-cap">🌼 回忆花园</div>
+      </div>
+
+      <div class="empty-tip" id="gardenEmpty" style="display:none">
+        <span class="et-emoji">🌱</span>
+        花园还空着。去讲讲人生时光、收张年代照片，每收一样就开一朵花。
+      </div>
+
+      <div class="page-pad-title">花园明细（后端统计）</div>
+      <div class="garden-metrics" id="gardenMetrics"></div>
+
+      <button class="btn btn-gold" onclick="goTime('life')">👤 去讲人生时光</button>
+      <button class="btn btn-primary" onclick="goTime('era')">🕰 去年代记忆</button>
+      <button class="btn btn-ghost" onclick="location.href='../时光花园_demo.html'">💬 去找小辽聊聊</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/garden.js"></script>
+</body>
+</html>

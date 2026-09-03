@@ -18,6 +18,9 @@ xiaoliao:
   ai:
     # 本地 AI 引擎 .env 里的 API_TOKEN（生产用环境变量 AI_API_TOKEN 注入）
     api-token: f5y2I6nxDg22K3yEHEU32dLqLX3AQILzMOSLZ4Yx4m77zERYRaXMH1FFBZQQaunY
+  asr:
+    # 语音识别 Key（与 AI 引擎共用阿里云百炼账号；生产用环境变量 QWEN_API_KEY 注入，不要直接提交到生产）
+    api-key: "sk-ws-H.PMMEDXH.e76M.MEUCIGrVn8qZdb5_4GfggiMSjaOflfZJj0O6bcxaZRoMP--dAiEA1JzyYbDXrk5pdGza9zsH3swpAW69wptGaiMx6cnl4i0"
 
 spring:
   datasource:
@@ -50,10 +53,10 @@ wecom:
   kf:
     open-kfid: wkCP0EbQAA3t2kcyOYR3--M3EGppSzrw
   poll:
-    enabled: true
+    enabled: false
     interval-ms: 10000
   group-reminder:
-    enabled: true
+    enabled: false
     webhook: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=b45218d3-0421-41e1-ad7d-7e26c7a42ceb
     cron: 0 0 9 * * ?
     content: 现在是九点，该打卡啦～ 需要帮助可以点击群里的「客服助理」

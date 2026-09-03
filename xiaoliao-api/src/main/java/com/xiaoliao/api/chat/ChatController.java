@@ -46,7 +46,6 @@ public class ChatController {
 
     private static final Pattern P_MOMENT = Pattern.compile(".*(朋友圈|文案|再改改|重写|换一条).*");
     private static final Pattern P_MATCH = Pattern.compile(".*(配.*图|当年的图|以前的图|以前是|以前的样子|示意图|再找找|再换).*");
-    private static final Pattern P_STORY = Pattern.compile(".*(讲故事|讲讲|说说.*以前|回忆).*");
     private static final Pattern P_NO_IMAGE = Pattern.compile(".*(不用图|不要图).*");
 
     @Operation(summary = "AI 对话", description = "发送用户消息（可带图片 URL），返回 AI 回复文本、意图与可选卡片。userId 由鉴权自动带入，无需传")
@@ -144,9 +143,8 @@ public class ChatController {
             card.put("buttons", buttons);
             return chatData("暂时没找到合适的示意图，您换个说法试试？比如“土房”“绿皮火车”这样的词～ 或者不用图，光发照片也行。", "m4_match_photo", card);
         }
-        if (P_STORY.matcher(message).matches()) {
-            return chatData("好呀，您慢慢讲，一次说一段就行。讲完我帮您记下来、润色润色。", "m4_story", null);
-        }
+        // 讲故事/回忆不再本地拦截：交给引擎识别（intent=m4_story/m4_era_memory），
+        // 由 AiService 把引擎 suggestions 渲染成“记下来”卡片
         return null;
     }
 

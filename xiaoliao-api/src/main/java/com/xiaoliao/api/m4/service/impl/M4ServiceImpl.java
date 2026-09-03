@@ -377,8 +377,20 @@ public class M4ServiceImpl implements M4Service {
             throw new BusinessException(429, "今天已经写过很多次啦，明天再来吧～");
         }
         String style = StringUtils.hasText(request.getStyle()) ? request.getStyle() : "simple";
-        // 本期规则模板兜底；AI 引擎 /v1/m4/moment 接入后替换
-        String[] templates = momentTemplates(style);
+        // 优先按故事润色/原文生成；没故事或没内容时退回规则模板兜底
+        List<String> templates = new ArrayList<>();
+        if (request.getStoryId() != null) {
+            M4Story story = storyMapper.selectById(request.getStoryId());
+            if (story != null && userId.equals(story.getUserId())) {
+                List<String> fromStory = momentCopyForStory(style, story);
+                if (fromStory != null) {
+                    templates.addAll(fromStory);
+                }
+            }
+        }
+        if (templates.isEmpty()) {
+            templates.addAll(Arrays.asList(momentTemplates(style)));
+        }
         List<MomentVO> result = new ArrayList<>();
         for (String template : templates) {
             M4MomentCopy copy = new M4MomentCopy();
@@ -395,6 +407,80 @@ public class M4ServiceImpl implements M4Service {
         }
         log.info("朋友圈文案生成: userId={}, style={}, count={}", userId, style, result.size());
         return result;
+    }
+
+    /** 依据故事润色/原文拼出 3 条朋友圈文案；无文本可引用时返回 null（走规则模板兜底） */
+    private List<String> momentCopyForStory(String style, M4Story story) {
+        String content = stripOuterQuotes(CryptoTypeHandler.decrypt(story.getPolishedText()));
+        if (!StringUtils.hasText(content)) {
+            content = stripOuterQuotes(CryptoTypeHandler.decrypt(story.getOriginalText()));
+        }
+        if (!StringUtils.hasText(content)) {
+            return null;
+        }
+        List<String> sentences = new ArrayList<>();
+        for (String piece : content.split("(?<=[。！？!?…])")) {
+            if (StringUtils.hasText(piece)) {
+                sentences.add(piece.trim());
+            }
+        }
+        if (sentences.isEmpty()) {
+            sentences.add(content.trim());
+        }
+        String full = String.join("", sentences);
+        String shortPart = sentences.get(0);
+        boolean cut = sentences.size() > 1;
+        if (shortPart.length() <= 90 && sentences.size() > 1) {
+            shortPart += sentences.get(1);
+            cut = sentences.size() > 2;
+        }
+        String[] frames = styleFrames(style == null ? "" : style);
+        List<String> result = new ArrayList<>();
+        result.add(frames[0] + full);
+        result.add(frames[1] + shortPart + (cut ? "……" : ""));
+        result.add(full + "\n" + frames[2]);
+        return result;
+    }
+
+    private String stripOuterQuotes(String text) {
+        if (!StringUtils.hasText(text)) {
+            return text;
+        }
+        String t = text.trim();
+        if (t.length() >= 2) {
+            char first = t.charAt(0);
+            char last = t.charAt(t.length() - 1);
+            if ((first == '"' && last == '"') || (first == '“' && last == '”')
+                    || (first == '「' && last == '」')) {
+                t = t.substring(1, t.length() - 1).trim();
+            }
+        }
+        return t;
+    }
+
+    private String[] styleFrames(String style) {
+        switch (style) {
+            case "warm":
+                return new String[]{
+                        "看到这张老照片，心里一下子就暖了：",
+                        "那些暖心的日子，好像就在昨天：",
+                        "这么多年了，再想起来，心里头还是热乎乎的。"};
+            case "humorous":
+                return new String[]{
+                        "哈哈，看到这张老照片就想起从前：",
+                        "现在跟小辈说起从前，自己都忍不住笑：",
+                        "说给孩子们听，他们都不信，可这真的都是从前。"};
+            case "proud":
+                return new String[]{
+                        "看看这张老照片，心里挺骄傲：",
+                        "一步一个脚印走过来，看着老照片就想说：",
+                        "从那时候走到今天，每一步都值。"};
+            default: // simple 朴实
+                return new String[]{
+                        "翻出老照片，想起从前的日子：",
+                        "照片泛黄了，从前的事还在眼前：",
+                        "一晃好多年了，如今想起这些，心里还是踏实的。"};
+        }
     }
 
     private String[] momentTemplates(String style) {

@@ -1,0 +1,60 @@
+时光花园 · 网页版（子页面目录，已接后端）
+======================================
+
+一、这是什么
+------------
+本目录是「时光花园」后端页面的独立目录（不是 uni-app、不是微信小程序）：
+  time.html   —— 我的时光（人生时光节点链 / 年代记忆），页面直连后端
+  garden.html —— 我的花园（后端统计计数开花）
+
+聊天首页是上一级的「时光花园_demo.html」（老页面，外观与聊天逻辑未动）：
+它的三个按键（👤 人生时光 / 🕰 年代记忆 / 🌷 看花园）分别跳转到本目录的
+time.html#life、time.html#era、garden.html；本目录两页的「回对话」也回到
+老页面。原来新建的 index.html 聊天页（重复聊天页）已删除，不要再以本目录
+为入口单独打开。
+
+二、后端连接
+------------
+1. 默认后端地址：http://localhost:8080（后端 dev 跑起来即可，鉴权默认关闭）
+   → 改 js/config.js 里 BASE_URL 一处即可切隧道（如 https://xiaoliao.natapp1.cc）
+   → 若后端开了鉴权，把 TOKEN 填到 config.js（开发联调一般不需要）
+2. 已接通的后端接口（全部只读+新增，不删不改）：
+   GET  /api/v1/m4/timeline            人生时光节点链（首次自动建预设节点）
+   POST /api/v1/m4/timeline/nodes      加自定义节点
+   GET  /api/v1/m4/eras | POST /eras   年代记忆列表/新建
+   POST /api/upload                    图片上传（multipart file）
+   POST /api/v1/m4/photos              存照片（user=现在的照片 / stock=示意图）
+   GET  /api/v1/m4/photos              我的照片
+   GET  /api/v1/m4/stories             故事列表（可 ?nodeId=）
+   POST /api/v1/m4/stories             存故事（原文+润色）
+   POST /api/v1/m4/match               按“以前的样子”匹配年代示意图
+   POST /api/v1/m4/moments/generate    生成 3 条朋友圈文案
+   POST /api/v1/m4/moments/{id}/select 选中文案
+   GET  /api/v1/m4/garden              花园五类计数
+   POST /api/v1/m4/timeline/nodes/{id}/share-help  生成家人帮忙链接（token）
+3. 数据都存后端数据库（当前 dev = mock 用户 7764978f…）；画像仍在浏览器本地。
+
+三、怎么打开（后端先跑在 8080）
+----------------------------
+方式一（推荐）：双击上一级目录的 start.bat（Windows）
+  → http://127.0.0.1:8731/时光花园_demo.html
+  macOS：上一级 start.command；Linux：上一级 start.sh
+方式二：不想起服务时，在上一级目录直接双击「时光花园_demo_单文件版.html」。
+
+四、各页说明
+------------
+· 首页/聊天（上一级 时光花园_demo.html）：外观与聊天逻辑未动；聊天底部三个
+  快捷键直接跳本目录 time/garden 两页。
+· 我的时光 - 人生时光：节点链来自后端；点节点 → 传照片/讲故事（可选联网润色）/
+  写朋友圈文案/请家人帮忙（7 天 token）。
+· 我的时光 - 年代记忆：新建年代 → 进年代 → 传“现在的照片”→ 描述“以前的样子”
+  → 后端 match 返回年代示意图 → 点选生成对照卡（收进照片库，花园开花）。
+· 我的花园：开花数=故事+照片+年代+文案（预设 7 节点不算花，明细里展示）；后端
+  连不上时自动降级显示本地演示计数。
+
+五、提醒
+--------
+· 年代示意图素材库种子是占位 URL（cdn.example.com），后端换真实公版图后自动显示；
+  换之前页面显示图标占位，不影响流程。
+· “请家人帮忙”目前通了生成/免登录接口，亲友落地页（H5/小程序）另做。
+· 演示用 DeepSeek Key 公开，正式前替换。

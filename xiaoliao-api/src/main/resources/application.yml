@@ -34,6 +34,13 @@ xiaoliao:
   pexels:
     # Pexels 图库 API Key（免费申请 https://www.pexels.com/api/；为空时配图只走本地素材库）
     key: ${XIAOLIAO_PEXELS_KEY:}
+  # 语音识别（阿里云百炼 qwen3-asr-flash，音频 base64 直传；与 AI 引擎共用 QWEN_API_KEY，按音频时长计费）
+  asr:
+    api-key: ${QWEN_API_KEY:}
+    model: ${ASR_MODEL:qwen3-asr-flash}
+    http-url: ${ASR_HTTP_URL:https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation}
+    # 单次识别超时（录音最长 60s，给足余量）
+    timeout: 90s
   jwt:
     secret: ${XIAOLIAO_JWT_SECRET:xiaoliao-dev-secret-change-in-production-2026}
     expire-hours: 168

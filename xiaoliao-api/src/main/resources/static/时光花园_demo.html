@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时光花园 · 交互 DEMO v3（双叙事版）</title>
+<style>
+  :root {
+    --bg: #F5EFE0; --panel: #FBF7EC; --ink: #6B4F3A; --ink-soft: #8A6F55;
+    --gold: #C9A227; --green: #7A8450; --orange: #D97B29; --line: #E3D9C2;
+    --shadow: 0 8px 24px rgba(107,79,58,.18); --radius: 22px;
+    --mine: #FBE9D2; --theirs: #FFFFFF;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:#3A3129; font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; color:var(--ink); display:flex; justify-content:center; align-items:center; min-height:100vh; padding:24px; }
+  .phone { width:400px; height:820px; background:var(--bg); border-radius:44px; overflow:hidden; position:relative; box-shadow:0 0 0 10px #1f1a15,0 30px 60px rgba(0,0,0,.5); display:flex; flex-direction:column; }
+  .statusbar { height:34px; display:flex; justify-content:space-between; align-items:center; padding:0 26px; font-size:13px; font-weight:600; color:var(--ink); flex-shrink:0;}
+  .notch { position:absolute; top:10px; left:50%; transform:translateX(-50%); width:120px; height:22px; background:#1f1a15; border-radius:12px; z-index:50; }
+  .screen { flex:1; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; display:none; }
+  .screen::-webkit-scrollbar { display:none; }
+  .screen.active { display:flex; flex-direction:column; }
+  .page-pad { padding:6px 18px 16px; }
+
+  /* 对话页 */
+  .chat-head { flex-shrink:0; display:flex; align-items:center; gap:10px; padding:8px 16px 10px; background:var(--panel); border-bottom:1px solid var(--line); }
+  .chat-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#C9A227,#D97B29); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;}
+  .chat-head .who { font-size:17px; font-weight:700; } .chat-head .status { font-size:12px; color:var(--green); }
+  .chat-body { flex:1; overflow-y:auto; padding:14px 14px 10px; scrollbar-width:none; }
+  .chat-body::-webkit-scrollbar { display:none; }
+  .msg { display:flex; gap:8px; margin-bottom:14px; align-items:flex-end; }
+  .msg .m-avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#C9A227,#D97B29); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
+  .msg.mine { flex-direction:row-reverse; } .msg.mine .m-avatar { background:linear-gradient(135deg,#B49BB0,#96788F); }
+  .bubble { max-width:78%; padding:12px 15px; border-radius:18px; font-size:17px; line-height:1.55; background:var(--theirs); box-shadow:0 2px 8px rgba(107,79,58,.08); }
+  .msg.mine .bubble { background:var(--mine); border-top-right-radius:6px; } .msg .bubble { border-top-left-radius:6px; }
+  .bubble .b-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+  .bubble .b-sub { font-size:13px; color:var(--ink-soft); }
+
+  /* 照片卡 */
+  .photo-card { width:200px; border-radius:12px; overflow:hidden; background:linear-gradient(135deg,#d9c9a8,#c2ab83); margin-top:8px; }
+  .photo-card .pc-img { height:120px; display:flex; align-items:center; justify-content:center; font-size:52px; position:relative;}
+  .photo-card .pc-note { position:absolute; bottom:6px; right:8px; font-size:11px; color:#fff; background:rgba(0,0,0,.28); padding:2px 8px; border-radius:999px; }
+  .photo-card .pc-cap { padding:8px 12px; font-size:13px; color:var(--ink); background:var(--panel); text-align:center; }
+
+  /* 录音气泡 */
+  .rec-row { display:flex; align-items:center; gap:10px; margin-top:8px; }
+  .rec-micro { width:56px; height:56px; border-radius:50%; border:none; cursor:pointer; flex-shrink:0; background:radial-gradient(circle,#E88A4A,#D97B29); color:#fff; font-size:24px; box-shadow:0 6px 16px rgba(217,123,41,.4); transition:transform .15s; }
+  .rec-micro:active { transform:scale(.9); } .rec-micro.on { animation:pulse 1.1s infinite; background:radial-gradient(circle,#E05A3A,#C9442A); }
+  @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+  .rec-wave { font-size:15px; color:var(--ink-soft); letter-spacing:1px; min-width:80px; } .rec-sec { font-size:13px; color:var(--ink-soft); }
+
+  /* 小辽语音条（微信风格） */
+  .voice-msg {
+    display:flex; align-items:center; gap:8px; margin-top:6px; padding:10px 12px;
+    border-radius:12px; background:#F0F0F0; cursor:pointer; user-select:none;
+    border:1.5px solid var(--line); transition:all .2s; max-width:220px;
+  }
+  .voice-msg.playing { border-color:var(--orange); background:#FBE9D2; }
+  .voice-msg .vm-ico { font-size:18px; flex-shrink:0; }
+  .voice-msg .vm-wave { display:flex; align-items:center; gap:2px; flex:1; }
+  .voice-msg .vm-wave i { width:3px; border-radius:2px; background:var(--ink-soft); transition:height .2s; }
+  .voice-msg.playing .vm-wave i { background:var(--orange); }
+  .voice-msg .vm-dur { font-size:12px; color:var(--ink-soft); flex-shrink:0; }
+  .voice-msg .vm-txt { font-size:14px; color:var(--ink); margin-top:2px; }
+  .vm-text-line { font-size:15px; line-height:1.6; margin-top:6px; color:var(--ink); }
+
+  /* 选项 */
+  .opts { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+  .opt { padding:13px 16px; border-radius:14px; border:2px solid var(--line); background:var(--panel); font-size:17px; font-weight:600; color:var(--ink); cursor:pointer; transition:all .2s; text-align:center; }
+  .opt:hover, .opt.sel { border-color:var(--gold); background:#F7E8C3; }
+  .opt.primary { background:var(--orange); border-color:var(--orange); color:#fff; }
+
+  /* 输入区 */
+  .chat-input-bar { flex-shrink:0; background:var(--panel); border-top:1px solid var(--line); padding:8px 12px 10px; }
+  .quick-row { display:flex; gap:8px; margin-bottom:8px; }
+  .quick-chip { flex:1; padding:9px 0; border-radius:999px; border:1.5px solid var(--line); background:var(--panel); font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; text-align:center; transition:all .2s; }
+  .quick-chip:hover { border-color:var(--gold); background:#F7E8C3; }
+  .input-row { display:flex; gap:8px; align-items:center; }
+  .chat-input { flex:1; padding:12px 16px; border-radius:999px; border:1.5px solid var(--line); font-size:16px; background:#fff; color:var(--ink); outline:none; }
+  .send-btn { width:46px; height:46px; border-radius:50%; border:none; background:var(--orange); color:#fff; font-size:19px; cursor:pointer; flex-shrink:0;}
+  .send-btn:active { transform:scale(.92); }
+  .mic-input-btn { width:46px; height:46px; border-radius:50%; border:none; flex-shrink:0; cursor:pointer; background:radial-gradient(circle,#E88A4A,#D97B29); color:#fff; font-size:20px; box-shadow:0 4px 12px rgba(217,123,41,.35); transition:transform .15s; }
+  .mic-input-btn:active { transform:scale(.9); } .mic-input-btn.listening { animation:pulse 1.1s infinite; background:radial-gradient(circle,#E05A3A,#C9442A); }
+
+  /* 语音回答提示 */
+  .voice-hint { font-size:14px; color:var(--ink-soft); line-height:1.7; }
+
+  /* 通用 */
+  .greet { font-size:22px; font-weight:700; margin:10px 2px 4px; }
+  .sub { font-size:14px; color:var(--ink-soft); margin-bottom:12px; }
+  .btn { display:block; width:100%; padding:18px; border:none; border-radius:18px; font-size:20px; font-weight:700; cursor:pointer; transition:transform .15s; }
+  .btn:active { transform:scale(.97); }
+  .btn-primary { background:var(--orange); color:#fff; } .btn-soft { background:#EFE6D0; color:var(--ink); }
+  .btn-gold { background:var(--gold); color:#fff; } .btn-ghost { background:transparent; color:var(--ink-soft); font-size:17px; font-weight:600; padding:14px; }
+  .card { background:var(--panel); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); margin-bottom:14px; border:1px solid var(--line); }
+  .card-title { font-size:20px; font-weight:700; margin-bottom:8px; }
+  .tag { display:inline-block; background:#EFE6D0; color:var(--ink); border-radius:999px; padding:4px 12px; font-size:13px; font-weight:600; }
+
+  /* 我的时光：两块入口 */
+  .nar-card { display:flex; align-items:center; gap:14px; padding:18px; border-radius:20px; margin-bottom:14px; cursor:pointer; transition:transform .15s; border:1px solid var(--line); }
+  .nar-card:active { transform:scale(.98); }
+  .nar-card .nc-ico { width:60px; height:60px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; }
+  .nar-card .nc-name { font-size:20px; font-weight:800; }
+  .nar-card .nc-sub { font-size:13px; color:var(--ink-soft); margin-top:2px; }
+  .nar-card .nc-go { margin-left:auto; font-size:22px; color:var(--ink-soft); }
+  .nar-life { background:linear-gradient(135deg,#F7E8C3,#F0DC9E); } .nar-life .nc-ico { background:#fff; }
+  .nar-era { background:linear-gradient(135deg,#E8E3C8,#D9D2AC); } .nar-era .nc-ico { background:#fff; }
+
+  /* 节点链 */
+  .tl-item { display:flex; gap:12px; margin-bottom:4px; align-items:flex-start; cursor:pointer; }
+  .tl-dot { width:18px; height:18px; border-radius:50%; background:#E0D5BA; margin-top:6px; flex-shrink:0; border:2px solid var(--line);}
+  .tl-dot.done { background:var(--gold); border-color:var(--gold); }
+  .tl-name { font-size:17px; font-weight:600; padding:4px 0 10px; }
+  .tl-name.done { color:var(--ink); } .tl-name:not(.done){ color:var(--ink-soft); }
+  .tl-story-count { font-size:12px; color:var(--ink-soft); margin-left:6px; }
+
+  /* 年代列表 */
+  .era-item { display:flex; align-items:center; gap:12px; padding:14px; background:var(--panel); border:1px solid var(--line); border-radius:16px; margin-bottom:10px; cursor:pointer; }
+  .era-item .ei-ph { width:52px; height:52px; border-radius:12px; background:linear-gradient(135deg,#d9c9a8,#c2ab83); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0;}
+  .era-item .ei-name { font-size:17px; font-weight:700; }
+  .era-item .ei-date { font-size:12px; color:var(--ink-soft); margin-top:2px; }
+
+  /* 花园 */
+  .garden { background:linear-gradient(180deg,#F7F0DC 0%,#EDE4C8 60%,#E4D7B4 100%); border-radius:var(--radius); min-height:300px; position:relative; overflow:hidden; border:1px solid var(--line); margin-bottom:14px;}
+  .garden .sun { position:absolute; top:14px; right:20px; font-size:34px; opacity:.9; }
+  .garden .hill { position:absolute; bottom:0; left:0; right:0; height:46px; background:linear-gradient(180deg,#C9D4A5,#A9B87E); border-radius:50% 50% 0 0/70% 100% 0 0; }
+  .flower { position:absolute; bottom:42px; font-size:30px; animation:bloom .7s ease; }
+  .bud { position:absolute; bottom:40px; font-size:22px; opacity:.65; }
+  @keyframes bloom { 0%{transform:scale(0) rotate(-30deg); opacity:0;} 70%{transform:scale(1.15);} 100%{transform:scale(1);} }
+  .garden-cap { position:absolute; top:12px; left:14px; font-size:15px; font-weight:700; color:var(--ink); background:rgba(255,255,255,.6); padding:6px 12px; border-radius:999px; }
+  .garden-setting { position:absolute; top:12px; right:14px; font-size:20px; border:none; background:rgba(255,255,255,.7); width:38px; height:38px; border-radius:50%; cursor:pointer; }
+  .garden-mini { margin-top:8px; background:linear-gradient(180deg,#F7F0DC,#E4D7B4); border-radius:12px; padding:10px; min-height:80px; }
+  .garden-mini .gm-flowers { font-size:26px; letter-spacing:4px; margin-top:6px; text-align:center; }
+  .garden-mini .gm-note { font-size:11px; color:var(--ink-soft); text-align:center; margin-top:4px; }
+
+  /* 年代对照 */
+  .tc-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+  .tc-ph { border:2px solid var(--line); border-radius:12px; background:linear-gradient(160deg,#c9b88f,#a89a6e); color:#fff; font-size:34px; padding:16px 8px 10px; cursor:pointer; text-align:center; display:flex; flex-direction:column; gap:6px; transition:all .2s; }
+  .tc-ph:hover, .tc-ph:active { border-color:var(--gold); transform:scale(.97); }
+  .tc-ph span { font-size:12px; font-weight:600; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.3); }
+  .tc-contrast { display:flex; align-items:stretch; gap:8px; margin-top:8px; }
+  .tcc-side { flex:1; border-radius:12px; overflow:hidden; border:2px solid var(--line); background:var(--panel); }
+  .tcc-img { height:110px; background:linear-gradient(160deg,#c9b88f,#a89a6e); display:flex; align-items:center; justify-content:center; font-size:42px; color:#fff; }
+  .tcc-cap { padding:8px; font-size:12px; font-weight:700; text-align:center; color:var(--ink); line-height:1.4; }
+  .tcc-vs { display:flex; align-items:center; font-size:20px; color:var(--gold); font-weight:800; }
+
+  /* 润色卡片 */
+  .polish-card { margin-top:8px; background:#F7E8C3; border-radius:12px; padding:12px; border:1px solid var(--gold); }
+  .polish-card .pc-label { font-size:12px; color:var(--ink-soft); margin-bottom:6px; }
+  .polish-card .pc-text { font-size:15px; line-height:1.6; font-weight:600; }
+
+  /* 弹层 */
+  .overlay { position:absolute; inset:0; background:rgba(40,30,20,.55); z-index:80; display:none; align-items:center; justify-content:center; padding:24px; }
+  .overlay.show { display:flex; }
+  .share-card { width:100%; background:#fffdf6; border-radius:20px; padding:20px; box-shadow:var(--shadow); }
+  .share-card .sc-ph { height:180px; border-radius:14px; background:linear-gradient(135deg,#d9c9a8,#c2ab83); display:flex; align-items:center; justify-content:center; font-size:56px; position:relative; margin-bottom:12px;}
+  .share-card .sc-title { font-size:22px; font-weight:800; text-align:center; margin-bottom:4px; }
+  .share-card .sc-sub { font-size:14px; color:var(--ink-soft); text-align:center; margin-bottom:12px; }
+  .share-card .sc-brand { text-align:center; font-size:13px; color:var(--gold); font-weight:700; margin-bottom:12px; }
+  .sc-qr { width:70px; height:70px; margin:0 auto 14px; background:repeating-conic-gradient(#333 0% 25%,#fff 0% 50%) 50%/14px 14px; border-radius:8px; }
+  .modal { position:absolute; inset:0; background:rgba(40,30,20,.55); z-index:80; display:none; align-items:center; justify-content:center; padding:24px; }
+  .modal.show { display:flex; }
+  .modal-box { width:100%; background:var(--panel); border-radius:22px; padding:22px; box-shadow:var(--shadow); }
+  .link-box { background:#EFE6D0; border-radius:14px; padding:14px; font-size:14px; color:var(--ink-soft); margin-bottom:14px; word-break:break-all; }
+
+  .toast { position:absolute; top:38%; left:50%; transform:translate(-50%,-50%) scale(.8); background:rgba(107,79,58,.92); color:#fff; padding:18px 28px; border-radius:20px; font-size:18px; font-weight:700; opacity:0; pointer-events:none; transition:all .35s; z-index:60; text-align:center;}
+  .toast.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .typing { display:inline-flex; gap:4px; padding:6px 4px; }
+  .typing i { width:7px; height:7px; border-radius:50%; background:var(--ink-soft); animation:tp 1.2s infinite; }
+  .typing i:nth-child(2){ animation-delay:.2s; } .typing i:nth-child(3){ animation-delay:.4s; }
+  @keyframes tp { 0%,60%,100%{opacity:.25; transform:translateY(0);} 30%{opacity:1; transform:translateY(-4px);} }
+  .fade-up { animation:fadeUp .4s ease; }
+  @keyframes fadeUp { from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;} }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="notch"></div>
+
+  <!-- ============ 小辽对话（默认首页） ============ -->
+  <div class="screen active" id="screen-chat">
+    <div class="chat-head">
+      <div class="chat-avatar">🌼</div>
+      <div><div class="who">小辽</div><div class="status">● 我在呢，随时找我聊天</div></div>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-input-bar">
+      <div class="quick-row">
+        <div class="quick-chip" onclick="goLifePage()">👤 人生时光</div>
+        <div class="quick-chip" onclick="goEraPage()">🕰 年代记忆</div>
+        <div class="quick-chip" onclick="goGardenPage()">🌷 看花园</div>
+      </div>
+      <div class="input-row">
+        <button class="mic-input-btn" id="micInputBtn" onclick="micInput()">🎙</button>
+        <input class="chat-input" id="chatInput" placeholder="和小辽说点什么…（点🎙直接说话）" onkeydown="if(event.key==='Enter')sendText()">
+        <button class="send-btn" onclick="sendText()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 我的时光 ============ -->
+  <div class="screen" id="screen-time">
+    <div class="page-pad">
+      <div class="greet">⏳ 我的时光</div>
+      <div class="sub">两条叙事，慢慢讲，慢慢攒</div>
+
+      <div class="nar-card nar-life" onclick="showLifeTimeline()">
+        <div class="nc-ico">👤</div>
+        <div><div class="nc-name">人生时光</div><div class="nc-sub">我的一辈子</div></div>
+        <div class="nc-go">›</div>
+      </div>
+
+      <div class="nar-card nar-era" onclick="showEraCollection()">
+        <div class="nc-ico">🕰</div>
+        <div><div class="nc-name">年代记忆</div><div class="nc-sub">我最怀念的年代</div></div>
+        <div class="nc-go">›</div>
+      </div>
+
+      <div class="card-title" style="font-size:18px; margin:6px 0 10px">💊 故事合集（胶囊库）</div>
+      <div class="era-item" onclick="toast('🎧 正在播放…')">
+        <div class="ei-ph">🏮</div>
+        <div style="flex:1"><div class="ei-name">车间里的日子</div><div class="ei-date">2026.08.23 · 3:20 · 人生时光·工作</div></div>
+        <div style="font-size:22px; color:var(--orange)">▶</div>
+      </div>
+      <div class="era-item" onclick="toast('🎧 正在播放…')">
+        <div class="ei-ph">🌾</div>
+        <div style="flex:1"><div class="ei-name">下乡那几年</div><div class="ei-date">2026.08.21 · 2:05 · 年代记忆·70年代</div></div>
+        <div style="font-size:22px; color:var(--orange)">▶</div>
+      </div>
+      <button class="btn btn-ghost" onclick="switchTab(0)">回小辽聊天</button>
+    </div>
+  </div>
+
+  <!-- ============ 我的花园 ============ -->
+  <div class="screen" id="screen-garden">
+    <div class="page-pad">
+      <div class="greet">🌤 我的花园</div>
+      <div class="sub">开了 <b id="flowerCount">0</b> 朵花 · 每个故事都是一朵</div>
+      <div class="garden" id="garden">
+        <div class="sun">☀️</div>
+        <div class="garden-cap">🌼 回忆花园</div>
+        <button class="garden-setting" onclick="showSettings()">⚙️</button>
+        <div class="hill"></div>
+        <div id="flowerLayer"></div>
+      </div>
+      <button class="btn btn-gold" onclick="toast('📤 已生成花园分享图（演示）')">分享花园 ↗</button>
+      <button class="btn btn-ghost" onclick="switchTab(0)">回小辽聊天</button>
+    </div>
+  </div>
+
+  <!-- ============ 设置弹层 ============ -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-box">
+      <div style="font-size:20px; font-weight:700; margin-bottom:6px">⚙️ 设置</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)">
+        <span style="font-size:16px; font-weight:600">称呼</span>
+        <button class="tag" style="border:none; cursor:pointer" onclick="editProfile('name')">✏️ <span id="setName">老张</span></button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)">
+        <span style="font-size:16px; font-weight:600">出生年代</span>
+        <button class="tag" style="border:none; cursor:pointer" onclick="editProfile('era')">✏️ <span id="setEraLabel">50后</span></button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)">
+        <span style="font-size:16px; font-weight:600">叔叔 / 阿姨</span>
+        <button class="tag" style="border:none; cursor:pointer" onclick="editProfile('gender')">✏️ <span id="setGenderLabel">叔叔</span></button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)">
+        <span style="font-size:16px; font-weight:600">聊天风格</span>
+        <button class="tag" style="border:none; cursor:pointer" onclick="editProfile('style')">✏️ <span id="setStyleLabel">话多热闹些</span></button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)">
+        <span style="font-size:16px; font-weight:600">年代记忆定位授权</span><span class="tag">已授权</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)">
+        <span style="font-size:16px; font-weight:600">匿名使用统计</span><span class="tag">已授权</span>
+      </div>
+      <div class="sub" style="padding-top:8px">只统计大家怎么用，看不到你说了什么。录音、照片原图永不出本地。</div>
+      <button class="btn btn-soft" onclick="closeModal('settingsModal')">关闭</button>
+    </div>
+  </div>
+
+  <!-- ============ 人生时光（节点链）弹层 ============ -->
+  <div class="modal" id="lifeModal">
+    <div class="modal-box">
+      <div style="font-size:20px; font-weight:700">👤 人生时光 · 我的一辈子</div>
+      <div class="sub">点一个节点，讲讲那一段的故事</div>
+      <div id="lifeTimeline"></div>
+      <button class="btn btn-soft" onclick="toast('＋ 添加自定义节点（演示）')">＋ 添加节点</button>
+      <button class="btn btn-ghost" onclick="closeModal('lifeModal')">关闭</button>
+    </div>
+  </div>
+
+  <!-- ============ 年代记忆（年代列表）弹层 ============ -->
+  <div class="modal" id="eraModal">
+    <div class="modal-box">
+      <div style="font-size:20px; font-weight:700">🕰 年代记忆 · 我最怀念的年代</div>
+      <div class="sub">每个年代，都是回不去的好日子</div>
+      <div id="eraList"></div>
+      <button class="btn btn-soft" onclick="startEraContrast()">＋ 新建年代对照</button>
+      <button class="btn btn-ghost" onclick="closeModal('eraModal')">关闭</button>
+    </div>
+  </div>
+
+  <!-- ============ 分享卡弹层 ============ -->
+  <div class="overlay" id="shareOverlay">
+    <div class="share-card">
+      <div class="sc-ph" id="scPh">🖼</div>
+      <div class="sc-title" id="scTitle">那年全家福</div>
+      <div class="sc-sub" id="scSub">老张的时光花园 · 8月23日</div>
+      <div class="sc-qr"></div>
+      <div class="sc-brand">时光花园 · 把回忆种成花园</div>
+      <button class="btn btn-primary" onclick="closeOverlay()">完成</button>
+    </div>
+  </div>
+
+  <!-- ============ 分享链接弹层 ============ -->
+  <div class="modal" id="linkModal">
+    <div class="modal-box">
+      <div style="font-size:20px; font-weight:700; margin-bottom:6px">👨‍👩‍👧 请朋友帮忙补全</div>
+      <div class="sub">把链接发给儿女或老友，他们点开就能传照片/补细节，不用下载</div>
+      <div class="link-box">https://shiguanghuayuan.cn/s/8f3k2m<br><span style="font-size:12px">⏱ 链接 7 天内有效 · 可随时作废</span></div>
+      <button class="btn btn-primary" style="margin-bottom:10px" onclick="toast('📋 链接已复制，去微信发给家人吧')">复制链接发给家人</button>
+      <button class="btn btn-ghost" onclick="closeModal('linkModal')">取消</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ================= 状态 ================= */
+let flowerN = 0;
+const FLOWERS = ['🌼','🌷','🌻','🌸','🌺','🌹','💐','🏵️'];
+const FLOOR_X = [8,22,36,50,64,78,92,106,120,134,148,162,176,190,204,218,232,246,260,274,288,302,316];
+const SCREENS = ['screen-chat','screen-time','screen-garden'];
+let profile = { name:'', era:'', gender:'', style:'' };
+const PROFILE_KEY = 'hgs_profile_v3';
+let storyDone = false;
+let awaitingInput = null;
+let pendingField = null;
+let voiceSeq = 0;
+let speechRec = null;
+let micGranted = false;
+let lastNarr = 'life';
+
+function loadProfile(){ try { const s=localStorage.getItem(PROFILE_KEY); if(s) profile=Object.assign(profile,JSON.parse(s)); } catch(e){} }
+function saveProfile(){ try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch(e){} }
+function eraLabel(e){ return {e40:'40后',e50:'50后',e60:'60后',e70:'70后',e80:'80后'}[e]||''; }
+function styleLabel(s){ return {chatty:'话多热闹些',quiet:'话少安静些',any:'都行，你看着办'}[s]||''; }
+function myName(){ return profile.name||'阿姨'; }
+function myTitle(){ return profile.gender==='男'?'叔叔':profile.gender==='女'?'阿姨':'您'; }
+
+/* ================= 通用 ================= */
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1600); }
+function show(id){ document.getElementById(id).classList.add('show'); }
+function hide(id){ document.getElementById(id).classList.remove('show'); }
+function switchTab(i){
+  SCREENS.forEach((s,idx)=>{ const el=document.getElementById(s); if(el) el.classList.toggle('active', idx===i); });
+}
+function chatBody(){ return document.getElementById('chatBody'); }
+function scrollChat(){ const b=chatBody(); b.scrollTop=b.scrollHeight; }
+
+function addMsg(html, mine=false, voice=false){
+  const w=document.createElement('div');
+  w.className='msg'+(mine?' mine':'');
+  if(voice && !mine){
+    // 语音模式：语音条 + 文字行（微信风格），纯文本内容
+    w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"></div>';
+    const bubble=w.querySelector('.bubble');
+    const vm=document.createElement('div');
+    vm.className='voice-msg';
+    vm.dataset.playing='0';
+    vm.innerHTML='<span class="vm-ico">🎵</span>'+
+      '<span class="vm-wave"><i style="height:8px"></i><i style="height:14px"></i><i style="height:10px"></i><i style="height:16px"></i><i style="height:9px"></i></span>'+
+      '<span class="vm-dur"></span>';
+    const cleanText=html;
+    vm.onclick=()=>speakReply(cleanText, vm);
+    bubble.appendChild(vm);
+    const tl=document.createElement('div');
+    tl.className='vm-text-line';
+    tl.textContent=html;
+    bubble.appendChild(tl);
+  } else {
+    w.innerHTML='<div class="m-avatar">'+(mine?'🌷':'🌼')+'</div><div class="bubble">'+html+'</div>';
+  }
+  chatBody().appendChild(w); scrollChat();
+  return w;
+}
+function addTyping(cb, ms=700){
+  const w=document.createElement('div');
+  w.className='msg';
+  w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div>';
+  chatBody().appendChild(w); scrollChat();
+  setTimeout(()=>{ w.remove(); cb(); }, ms);
+}
+function addOpts(opts){
+  const w=document.createElement('div');
+  w.className='msg';
+  w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"><div class="opts">'+opts.map(o=>`<button class="opt ${o.cls||''}" onclick="${o.fn}">${o.label}</button>`).join('')+'</div></div>';
+  chatBody().appendChild(w); scrollChat();
+}
+function addPhotoCard(cap, note){
+  const w=document.createElement('div');
+  w.className='msg';
+  w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"><div class="b-title">收到啦</div><div class="photo-card"><div class="pc-img">🖼<span class="pc-note">'+note+'</span></div><div class="pc-cap">'+cap+'</div></div></div>';
+  chatBody().appendChild(w); scrollChat();
+}
+function addRecBar(){
+  const w=document.createElement('div');
+  w.className='msg';
+  w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"><div class="b-title">🎙 想讲就讲，我听着呢</div>'+
+    '<div class="rec-row"><button class="rec-micro" id="recMicro" onclick="toggleRec()">🎙</button>'+
+    '<span class="rec-wave" id="recWave">· · ·</span><span class="rec-sec" id="recSec">0″</span></div></div>';
+  chatBody().appendChild(w); scrollChat();
+}
+let recOn=false, recSec=0, recTimer=null;
+function toggleRec(){
+  recOn=!recOn;
+  const m=document.getElementById('recMicro'), w=document.getElementById('recWave'), s=document.getElementById('recSec');
+  if(recOn){
+    m.classList.add('on'); m.textContent='⏺'; recSec=0; s.textContent='0″';
+    recTimer=setInterval(()=>{ recSec++; s.textContent=recSec+'″'; if(recSec>=60) stopRec(); },1000);
+    clearInterval(w._t); w._t=setInterval(()=>{ w.textContent='▅▃▇▁▆'.split('').sort(()=>Math.random()-.5).join(' '); },150);
+  } else stopRec();
+}
+function stopRec(){
+  recOn=false;
+  const m=document.getElementById('recMicro'), w=document.getElementById('recWave'), s=document.getElementById('recSec');
+  if(m){ m.classList.remove('on'); m.textContent='🎙'; }
+  clearInterval(recTimer); if(w) clearInterval(w._t);
+  if(s) s.textContent=recSec+'″';
+  if(recSec>=3){ onStoryRecorded(); }
+}
+function addGardenMini(){
+  const w=document.createElement('div');
+  w.className='msg';
+  w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"><div class="garden-mini"><div class="gm-cap">🌼 你的回忆花园</div>'+
+    '<div class="gm-flowers">'+Array.from({length:flowerN},(_,i)=>FLOWERS[i%FLOWERS.length]).join('')+'</div>'+
+    '<div class="gm-note">已经开 '+flowerN+' 朵花 · 每个故事都是一朵</div></div></div>';
+  chatBody().appendChild(w); scrollChat();
+}
+
+/* ================= 花园 ================= */
+function addFlower(){
+  flowerN++;
+  const fc=document.getElementById('flowerCount'); if(fc) fc.textContent=flowerN;
+  const layer=document.getElementById('flowerLayer');
+  const f=document.createElement('span');
+  f.className='flower';
+  f.textContent=FLOWERS[(flowerN-1)%FLOWERS.length];
+  f.style.left=FLOOR_X[Math.floor(Math.random()*FLOOR_X.length)]+'px';
+  f.style.top=(90+Math.floor(Math.random()*60))+'px';
+  layer.appendChild(f);
+}
+
+/* ================= 语音输入（识别→输入框→用户确认发送） ================= */
+function speechSupported(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
+function micInput(){
+  const btn=document.getElementById('micInputBtn');
+  if(!speechSupported()){
+    const said=prompt('当前浏览器不支持语音识别，手动输入你"说"的话：');
+    if(said&&said.trim()) document.getElementById('chatInput').value=said.trim();
+    return;
+  }
+  if(speechRec){ try{ speechRec.onresult=null; speechRec.onerror=null; speechRec.onend=null; speechRec.abort&&speechRec.abort(); }catch(e){} speechRec=null; }
+  btn.classList.add('listening'); btn.textContent='⏺'; toast('🎙 我在听，请说…');
+  const run=()=>{
+    try{
+      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      speechRec=new SR();
+      speechRec.lang='zh-CN'; speechRec.interimResults=false; speechRec.maxAlternatives=1; speechRec.continuous=false;
+      speechRec.onresult=(e)=>{
+        const said=e.results[0][0].transcript;
+        finishMic(btn);
+        if(said&&said.trim()){ document.getElementById('chatInput').value=said.trim(); document.getElementById('chatInput').focus(); toast('✍️ 已变成文字，改好了点 ➤ 发送'); }
+        else toast('没听清，您再说一遍？');
+      };
+      speechRec.onerror=(e)=>{
+        finishMic(btn);
+        if(e.error==='not-allowed'||e.error==='service-not-allowed') toast('🎙 麦克风权限没开：地址栏小锁→网站设置→允许麦克风');
+        else if(e.error==='no-speech') toast('没听到声音，您再说一遍？');
+        else{ const said=prompt('语音识别没成功（'+e.error+'），手动输入：'); if(said&&said.trim()) document.getElementById('chatInput').value=said.trim(); }
+      };
+      speechRec.onend=()=>finishMic(btn);
+      speechRec.start();
+      setTimeout(()=>{ if(speechRec){ try{ speechRec.stop(); }catch(err){} } },15000);
+    }catch(err){ finishMic(btn); toast('语音识别启动失败，请重试'); }
+  };
+  if(micGranted){ run(); return; }
+  navigator.mediaDevices.getUserMedia({audio:true})
+    .then(stream=>{ micGranted=true; stream.getTracks().forEach(t=>t.stop()); run(); })
+    .catch(err=>{ finishMic(btn); toast(err&&(err.name==='NotAllowedError'||err.name==='PermissionDeniedError')?'🎙 麦克风权限被拒绝，请在小锁图标里允许':'🎙 无法使用麦克风'); });
+}
+function finishMic(btn){ if(btn){ btn.classList.remove('listening'); btn.textContent='🎙'; } }
+
+/* ================= DeepSeek LLM ================= */
+const DS_API='https://api.deepseek.com/chat/completions';
+const DS_MODEL='deepseek-chat';
+let dsKey=localStorage.getItem('hgs_ds_key')||'sk-24383836e4be472c814980a63b99c4fb';
+let chatHistory=[];   // 对话历史：[{role:'user'|'assistant', content:'...'}]
+const MAX_HISTORY=12; // 最多保留最近 6 轮（12 条），控制 token 成本
+
+/* ================= 小辽语音播放（浏览器 TTS） ================= */
+let ttsVoice=null, ttsUtter=null;
+let ttsUnlocked=false;   // 浏览器自动播放策略：首次用户交互后解锁
+
+/* 在用户首次交互时解锁音频（Chrome 需要真实音频输出来解锁） */
+function unlockTts(){
+  if(ttsUnlocked || !('speechSynthesis' in window)) return;
+  try{
+    // 播一个极短的真实声音（不是静音），Chrome 才认可用户手势解锁
+    const u=new SpeechSynthesisUtterance('嗒');
+    u.volume=0.01;
+    u.rate=3;
+    u.onend=()=>{ ttsUnlocked=true; };
+    u.onerror=()=>{ ttsUnlocked=true; };  // 即使失败也标记，避免反复尝试
+    speechSynthesis.speak(u);
+  }catch(e){ ttsUnlocked=true; }
+}
+document.addEventListener('pointerdown', unlockTts, {once:false});
+document.addEventListener('keydown', unlockTts, {once:false});
+
+/* 选一个中文音色（按自然度优先级）；返回 null 表示没音色 */
+function pickVoice(){
+  if(ttsVoice) return ttsVoice;
+  const voices=window.speechSynthesis? speechSynthesis.getVoices():[];
+  if(!voices.length){ console.warn('TTS 音色列表为空'); return null; }
+  const zh=voices.filter(v=>/zh|Chinese|中文/i.test(v.lang)||/zh|Chinese/i.test(v.name));
+  // 自然度优先级：婷婷 > 美佳 > 晓晓/云希 > 其他 zh_CN
+  const order=['tingting','meijia','xiaoxiao','yunxi','huihui','yating','samantha'];
+  let best=null;
+  for(const name of order){
+    best=zh.find(v=>v.name.toLowerCase().includes(name));
+    if(best) break;
+  }
+  // 其次取 zh_CN 且名字像女性/清晰
+  if(!best) best=zh.find(v=>v.lang==='zh-CN'||v.lang.startsWith('zh_CN'));
+  ttsVoice=best||zh[0]||null;
+  if(!ttsVoice) console.warn('未找到中文音色，可用音色:', voices.map(v=>v.name).slice(0,8));
+  return ttsVoice;
+}
+/* 预加载音色列表（部分浏览器异步加载） */
+if(window.speechSynthesis){
+  speechSynthesis.onvoiceschanged=()=>{ pickVoice(); };
+  // 部分浏览器需手动触发一次 getVoices
+  setTimeout(()=>pickVoice(), 300);
+}
+
+/* 清理文本：去掉表情符号、markdown 符号，便于朗读 */
+function cleanForTts(text){
+  let t=text
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'')
+    .replace(/[*#_>`~]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+  // 让 TTS 念得更自然：中文与英文/数字间加空格（避免连读），长句补停顿
+  t=t.replace(/([\u4e00-\u9fff])([A-Za-z0-9])/g,'$1 $2');
+  t=t.replace(/([A-Za-z0-9])([\u4e00-\u9fff])/g,'$1 $2');
+  // 把 "……" 这类省略号转成句号（TTS 会停顿）
+  t=t.replace(/[…⋯]{2,}/g,'。');
+  return t;
+}
+
+/* 播放/暂停小辽的话（el 为语音条；auto=true 表示自动播放） */
+function speakReply(text, el, auto=false){
+  if(!('speechSynthesis' in window)){ toast('当前浏览器不支持语音播放'); return; }
+  // 自动播放但尚未解锁（用户还没点过页面）→ 提示点一下页面解锁
+  if(auto && !ttsUnlocked){
+    toast('点一下屏幕，小辽就能出声了 🔇');
+    return;
+  }
+  // 如果正在播这段，则停止
+  if(ttsUtter && speechSynthesis.speaking && el.dataset.playing==='1'){
+    speechSynthesis.cancel();
+    el.dataset.playing='0';
+    el.classList.remove('playing');
+    el.querySelector('.vm-ico').textContent='🎵';
+    return;
+  }
+  speechSynthesis.cancel(); // 先清掉其他语音
+  const clean=cleanForTts(text);
+  if(!clean){ toast('没有可朗读的内容'); return; }
+  const u=new SpeechSynthesisUtterance(clean);
+  const v=pickVoice();
+  if(v){ u.voice=v; u.lang=v.lang; }
+  else u.lang='zh-CN';
+  u.rate=1.1;    // 用户确认的语速
+  u.pitch=1.05;  // 略高一点，更温和亲切（婷婷音色会显得更柔和）
+  ttsUtter=u;
+  el.dataset.playing='1';
+  el.classList.add('playing');
+  el.querySelector('.vm-ico').textContent='⏸';
+  const dur=el.querySelector('.vm-dur');
+  // 波形动画 + 计时
+  const bars=el.querySelectorAll('.vm-wave i');
+  let sec=0;
+  const waveInt=setInterval(()=>{
+    bars.forEach(b=>{ b.style.height=(6+Math.floor(Math.random()*14))+'px'; });
+    sec+=0.25;
+    if(dur) dur.textContent=Math.ceil(sec)+'″';
+  },250);
+  const stopAnim=()=>{ clearInterval(waveInt); el.dataset.playing='0'; el.classList.remove('playing'); el.querySelector('.vm-ico').textContent='🎵'; bars.forEach(b=>b.style.height='10px'); };
+  u.onend=()=>{ if(dur) dur.textContent=''; stopAnim(); };
+  u.onerror=(e)=>{ if(dur) dur.textContent=''; stopAnim(); console.warn('TTS 播放失败:', e.error); };
+  // Chrome 坑：speak 后立即 paused 是常见 bug，这里处理
+  setTimeout(()=>{ if(speechSynthesis.speaking){ speechSynthesis.resume(); } }, 50);
+  speechSynthesis.speak(u);
+}
+
+function askDeepSeek(system,user,history){
+  return new Promise((resolve,reject)=>{
+    if(!dsKey){ const k=prompt('输入 DeepSeek API Key：'); if(!k){ reject(new Error('no-key')); return; } dsKey=k.trim(); localStorage.setItem('hgs_ds_key',dsKey); }
+    const msgs=[{role:'system',content:system}];
+    // 追加历史对话（若有）
+    if(history && history.length>0) msgs.push(...history);
+    msgs.push({role:'user',content:user});
+    fetch(DS_API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+dsKey},
+      body:JSON.stringify({model:DS_MODEL,messages:msgs,max_tokens:200,temperature:0.7,stream:false})})
+    .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(d=>resolve((d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content||'').trim()))
+    .catch(err=>{ localStorage.removeItem('hgs_ds_key'); dsKey=''; reject(err); });
+  });
+}
+function llmExtract(field,text){
+  const desc={name:'称呼：用户希望别人怎么称呼他。只输出称呼本身2-4个字。',era:'出生年代：只输出40后/50后/60后/70后/80后中的一个。',gender:'性别：只输出男或女。',style:'聊天风格：只输出 话多热闹/安静陪着/都行 中的一个。'};
+  return askDeepSeek('你是"小辽"——时光花园里陪伴老人的温暖助手。'+desc[field],'用户说："'+text+'"');
+}
+function normalizeLLM(field,raw){
+  if(!raw) return '';
+  if(field==='era'){ if(/40|四零/.test(raw))return 'e40'; if(/50|五零/.test(raw))return 'e50'; if(/60|六零/.test(raw))return 'e60'; if(/70|七零/.test(raw))return 'e70'; if(/80|八零/.test(raw))return 'e80'; return 'e60'; }
+  if(field==='gender') return /女|阿姨|姐姐/.test(raw)?'女':'男';
+  if(field==='style'){ if(/热闹|话多/.test(raw))return 'chatty'; if(/安静|话少/.test(raw))return 'quiet'; return 'any'; }
+  return raw.replace(/[，。、\s]/g,'').slice(0,6)||'老张';
+}
+function parseVoiceAnswer(field,text){
+  const mySeq=++voiceSeq; pendingField=field; addMsg(text,true);
+  llmExtract(field,text)
+    .then(raw=>{
+      if(mySeq!==voiceSeq||pendingField!==field) return;
+      const v=normalizeLLM(field,raw);
+      if(!verifyAnswer(field,v,text)){ applyAnswer(field,null,text); return; }
+      applyAnswer(field,v,text);
+    })
+    .catch(err=>{ if(mySeq!==voiceSeq||pendingField!==field) return; if(err&&err.message!=='no-key') toast('小辽走神了，先用本地理解'); applyAnswer(field,null,text); });
+}
+function verifyAnswer(field,v,text){
+  if(!v) return false;
+  if(field==='name'){ const clean=v.replace(/[的就行了罢呢啊呀哦哈呗啦]/g,''); if(clean.length<1)return false; return text.includes(clean.charAt(0)); }
+  if(field==='era') return /^e[4-8]0$/.test(v);
+  if(field==='gender') return v==='男'||v==='女';
+  if(field==='style') return ['chatty','quiet','any'].includes(v);
+  return false;
+}
+function applyAnswer(field,v,rawText){
+  if(field==='name') setName(v||parseName(rawText));
+  else if(field==='era') setEra(v||parseEra(rawText));
+  else if(field==='gender') setGender(v||parseGender(rawText));
+  else if(field==='style') setStyle(v||parseStyle(rawText));
+}
+function parseName(text){
+  const tail=/(就可以了|就行|就好了|就好|好了|就行啦|吧|了|呀|啊|呢|哦|的|哈|呗|嗯|呐|撒|啦|就行呗)[。，,\.\s]*$/;
+  const m=text.match(/(?:叫|喊|称呼|管)\s*(?:我|咱|您|你)?\s*([^\s，。,.！？!?，、]{1,6})/);
+  let n=m?m[1]:text;
+  n=n.replace(/^(请|就|麻烦|想|要|以后|以后就|就|你|您|我|咱|可以|叫我|喊我|管我|管叫|叫)/,'');
+  n=n.replace(tail,'').trim();
+  if(!n||n.length<1){ n=text.replace(/^(我叫|我是|就叫我|叫我|喊我|请叫我|你叫我|名字叫|以后叫我|管我叫)/,'').replace(tail,'').trim(); }
+  if(n.length>6) n=n.slice(0,6);
+  return n||'老张';
+}
+function cnToNum(s){ const map={零:0,一:1,二:2,两:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9}; let out='',cur=''; for(const ch of s){ if(ch in map){cur+=map[ch];} else if(cur){out+=cur;cur='';} } return out+cur; }
+function parseEra(text){
+  const digitText=text.replace(/[零一二两三四五六七八九]+/g,cnToNum);
+  const m=digitText.match(/19(\d{2})/);
+  if(m){ const y=parseInt(m[1]); if(y<50)return'e40'; if(y<60)return'e50'; if(y<70)return'e60'; if(y<80)return'e70'; return'e80'; }
+  const m2=digitText.match(/(\d{2})\s*年/);
+  if(m2){ const y=parseInt(m2[1]); if(y>=30&&y<50)return'e40'; if(y>=50&&y<60)return'e50'; if(y>=60&&y<70)return'e60'; if(y>=70&&y<80)return'e70'; if(y>=80&&y<90)return'e80'; }
+  if(/四零|40后|四十后|4后/.test(digitText))return'e40';
+  if(/五零|50后|五十后|五几年|5后/.test(digitText))return'e50';
+  if(/六零|60后|六十后|六几年|6后/.test(digitText))return'e60';
+  if(/七零|70后|七十后|七几年|7后/.test(digitText))return'e70';
+  if(/八零|80后|八十后|八几年|8后/.test(digitText))return'e80';
+  return'e60';
+}
+function parseGender(text){ if(/男|叔叔|大爷|老头|爷爷|大哥|先生/.test(text))return'男'; if(/女|阿姨|奶奶|大娘|婆婆|姐姐|妹子|大姐|姑娘/.test(text))return'女'; return''; }
+function parseStyle(text){ if(/话多|热闹|多说|多聊|能聊/.test(text))return'chatty'; if(/话少|安静|少说|陪着我|不用多说/.test(text))return'quiet'; return'any'; }
+
+/* ================= 首次聊天：画像 + 介绍双叙事 ================= */
+function boot(){
+  loadProfile();
+  if(!profile.name||!profile.era||!profile.gender||!profile.style) bootFirst();
+  else bootDaily();
+}
+function addVoiceHint(field,placeholder){
+  awaitingInput=field;
+  const w=document.createElement('div');
+  w.className='msg';
+  w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"><div class="voice-hint">🎙 点下面输入框旁的话筒，说完自动变成字<br>（说错了直接在框里改）<br>也可以直接打字 ↓</div></div>';
+  chatBody().appendChild(w); scrollChat();
+  const inp=document.getElementById('chatInput'); inp.placeholder=placeholder; inp.focus();
+}
+function bootFirst(){
+  addTyping(()=>{
+    addMsg('您好呀 🌼 我是<b>小辽</b>，以后我来陪您聊聊天、看看老照片。');
+    addTyping(()=>{
+      addMsg('还不知道怎么称呼您呢——您希望我叫您什么？');
+      addVoiceHint('name','告诉我该怎么称呼您…');
+    });
+  });
+}
+function setName(n){ profile.name=n; saveProfile(); awaitingInput=null; pendingField=null; addMsg('以后叫我「'+n+'」',true);
+  addTyping(()=>{ addMsg('好嘞，'+n+'！这名字听着亲切 😊');
+    addTyping(()=>{ addMsg('再问问您——您是哪一年出生的呀？<br>说个大概就行，比如"55年的"或者"五十年代"。'); addVoiceHint('era','您是哪一年出生的？'); });
+  });
+}
+function setEra(e){ profile.era=e; saveProfile(); awaitingInput=null; pendingField=null; addMsg(eraLabel(e),true);
+  addTyping(()=>{ addMsg('嗯，'+eraLabel(e)+'，那真是个好年代～');
+    addTyping(()=>{ addMsg('您是叔叔还是阿姨？'); addOpts([
+      {label:'👨 我是叔叔',fn:"setGender('男')"},
+      {label:'👩 我是阿姨',fn:"setGender('女')"},
+    ]); });
+  });
+}
+function setGender(g){ profile.gender=g; saveProfile(); awaitingInput=null; pendingField=null; addMsg(g==='男'?'我是叔叔':'我是阿姨',true);
+  addTyping(()=>{ addMsg('记下啦，'+myTitle()+' 😊');
+    addTyping(()=>{ addMsg('最后问一个——您喜欢我怎么陪您聊天？'); addOpts([
+      {label:'🗣 话多一点，热闹些',fn:"setStyle('chatty')"},
+      {label:'🤫 话少一点，安静陪着',fn:"setStyle('quiet')"},
+      {label:'🤝 都行，你看着办',fn:"setStyle('any')"},
+    ]); });
+  });
+}
+function setStyle(s){ profile.style=s; saveProfile(); awaitingInput=null; pendingField=null; addMsg(styleLabel(s),true);
+  addTyping(()=>{
+    addMsg('都记住啦：<b>'+myName()+'</b>，'+eraLabel(profile.era)+'，'+myTitle()+'，喜欢「'+styleLabel(s)+'」。');
+    addTyping(()=>{
+      addMsg('接下来，我要跟您说说我陪您做的两件大事～');
+      addTyping(()=>{
+        addMsg('<b>第一件：「人生时光」——我的一辈子</b>。<br>咱们把您这一辈子，一站一站讲给我听：出生、上学、工作、结婚、孩子、孙子……每个阶段都能攒下好多故事，最后我帮您拼成一本给孙辈的家书。');
+        addTyping(()=>{
+          addMsg('<b>第二件：「年代记忆」——我最怀念的年代</b>。<br>您总有几个最怀念的年代吧？哪天路过以前的老地方，拍张照片给我，我帮您把当年这里的样子找回来，拼在一起看看——现在的这里，和当年的这里。');
+          addTyping(()=>{
+            addMsg('我不编、不劝、不说教，就是好好陪您把这些都收好。');
+            addTyping(()=>{
+              addMsg('想先试试哪个？');
+              addOpts([
+                {label:'👤 先讲讲我的一辈子', cls:'primary', fn:"startLife()"},
+                {label:'🕰 先试试年代记忆', fn:"startEraContrast()"},
+                {label:'💬 随便聊聊天', fn:"chatSkipIntro()"},
+              ]);
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
+/* ================= 日常聊天 ================= */
+function bootDaily(){
+  const hour=new Date().getHours();
+  const greet=hour<6?'早上好':hour<12?'早上好':hour<18?'下午好':'晚上好';
+  addTyping(()=>{
+    addMsg(greet+'，'+myName()+' 🌼');
+    addTyping(()=>{
+      addMsg('今天过得咋样？顺心不？'); addOpts([
+        {label:'😊 挺好的',fn:"reply(1,'happy')"},
+        {label:'😐 一般般',fn:"reply(1,'mid')"},
+        {label:'😔 不太开心',fn:"reply(1,'sad')"},
+      ]);
+    });
+  });
+}
+function reply(step,mood){
+  // 用户选的选项：作为用户的回复显示
+  const mine = mood==='happy'?'😊 挺好的':mood==='mid'?'😐 一般般':'😔 不太开心';
+  addMsg(mine, true);
+  // 小辽的回应：语音条+文字
+  const resp = mood==='happy'?'那太好啦！':mood==='mid'?'平平淡淡也是一天，我陪着您。':'我在呢，咱们慢慢说。';
+  addTyping(()=>{
+    const wrapper=addMsg(resp, false, true);
+    const vm=wrapper.querySelector('.voice-msg');
+    if(vm) speakReply(resp, vm, true);
+    addTyping(()=>{
+      addMsg('想讲讲故事、看看老地方，还是就去花园坐坐？我都在。');
+      addOpts([
+        {label:'👤 讲讲我的一辈子',fn:"startLife()"},
+        {label:'🕰 看看我最怀念的年代',fn:"startEraContrast()"},
+        {label:'🌷 去花园看看',fn:"gotoGarden()"},
+        {label:'💬 就这么聊聊',fn:"idleChat()"},
+      ]);
+    });
+  });
+}
+
+/* ================= 叙事一：人生时光 ================= */
+const LIFE_NODES = [
+  {name:'出生与童年', era:'1940s–1950s', count:1, done:true},
+  {name:'上学', era:'1956–1962 · 那年我10岁', count:0, done:false},
+  {name:'工作/当兵', era:'1963–1980', count:2, done:true},
+  {name:'结婚成家', era:'1968', count:1, done:true},
+  {name:'生儿育女', era:'1970–1985', count:0, done:false},
+  {name:'孙辈', era:'2000s', count:0, done:false},
+  {name:'退休与现在', era:'2005–现在', count:0, done:false},
+];
+function startLife(){
+  lastNarr='life';
+  addMsg('👤 我想讲讲我的一辈子',true);
+  addTyping(()=>{
+    addMsg('好呀！咱们把您这一辈子，一站一站来。');
+    addTyping(()=>{
+      addMsg('您看，我按人生阶段给您排了一条链——出生、上学、工作、结婚、孩子、孙子、退休。哪一站您想先讲讲？');
+      addOpts([
+        {label:'🔧 讲讲「工作」这站', cls:'primary', fn:"lifeTellWork()"},
+        {label:'📋 先看看整条链', fn:"showLifeTimeline()"},
+        {label:'💬 先聊点别的', fn:"chatSkipIntro()"},
+      ]);
+    });
+  });
+}
+function lifeTellWork(){
+  addMsg('讲讲我工作那会儿',true);
+  addTyping(()=>{
+    addMsg('好呀！<b>「工作」</b>这站，您先放张那时的照片（没有也行）。');
+    addOpts([
+      {label:'📷 我传一张照片', cls:'primary', fn:"lifeUploadPhoto()"},
+      {label:'🎙 没有照片，直接讲', fn:"lifeSpeak()"},
+    ]);
+  });
+}
+function lifeUploadPhoto(){
+  addMsg('📷 传一张工作时的照片',true);
+  addTyping(()=>{ addPhotoCard('1980 年 · 车间留影','📅 1980 年'); },500);
+  addTyping(()=>{ addMsg('收到！这张照片真好。那会儿您每天都在忙什么？'); lifeSpeak(); });
+}
+function lifeSpeak(){
+  addTyping(()=>{
+    addMsg('想讲就讲，我听着呢 🎙（也可以打字）');
+    addRecBar();
+  });
+}
+function onStoryRecorded(){
+  addTyping(()=>{
+    addMsg('讲得真好，我好像也看见了那时候的您。');
+    addTyping(()=>{
+      addMsg('我帮您把这段话润色成一段工整的文字，您看看——');
+      addTyping(()=>{ addPolishCard('1963年我进厂当了学徒，师傅姓周，手把手教我车工。头一年天天磨刀、扫地、看图纸，第二年就能上手干活了。那时候虽然累，但厂里人多热闹，下班一起打球、看电影，日子过得有劲。'); },900);
+      addTyping(()=>{
+        addOpts([
+          {label:'✅ 就这样，收好', cls:'primary', fn:"lifeFinishStory()"},
+          {label:'✍️ 帮我改一下', fn:"lifeRewrite()"},
+        ]);
+      });
+    });
+  });
+}
+function addPolishCard(text){
+  const w=document.createElement('div');
+  w.className='msg';
+  w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"><div class="polish-card"><div class="pc-label">✍️ 小辽润色</div><div class="pc-text">'+text+'</div></div></div>';
+  chatBody().appendChild(w); scrollChat();
+}
+function lifeRewrite(){
+  addMsg('帮我改一下',true);
+  addTyping(()=>{
+    addMsg('好呀，您说说想改哪儿？比如"想再热闹点"或"把师傅写细些"，我重写给您看。');
+    addOpts([{label:'✍️ 就说"师傅写细些"',fn:"lifeFinishStory()"}]);
+  });
+}
+function lifeFinishStory(){
+  addMsg('✅ 就这样，收好',true);
+  LIFE_NODES.find(n=>n.name==='工作/当兵').count++;
+  addFlower();
+  addTyping(()=>{
+    addMsg('收好啦！「工作」这站又多了一个故事 🌷');
+    addGardenMini();
+    addTyping(()=>{
+      addMsg('想给家人看看，可以做成故事卡发朋友圈；想不起来的地方，也能让儿女帮忙补照片。');
+      addOpts([
+        {label:'📤 发朋友圈（演示）',fn:"showShare('story')"},
+        {label:'👨‍👩‍👧 请朋友帮忙补全',fn:"showShareLink()"},
+        {label:'💬 继续聊聊',fn:"chatSkipIntro()"},
+      ]);
+    });
+  });
+}
+
+/* ================= 叙事二：年代记忆 ================= */
+function startEraContrast(){
+  lastNarr='era';
+  addMsg('🕰 我想试试年代记忆',true);
+  addTyping(()=>{
+    addMsg('好呀！您最怀念哪个年代？咱们把当年找回来～');
+    addTyping(()=>{
+      addMsg('您现在是在以前常去的地方吗？（老街、母校、老厂都行）');
+      addOpts([
+        {label:'📷 拍一张现在的样子', cls:'primary', fn:"eraTakePhoto()"},
+        {label:'📋 先看看我的年代', fn:"showEraCollection()"},
+      ]);
+    });
+  });
+}
+function eraTakePhoto(){
+  addMsg('📷 好，我拍一张现在的地方',true);
+  addTyping(()=>{ addPhotoCard('现在的这里 · 2026 年（含位置）','📍 辽宁路 · 老纺织厂旧址'); },500);
+  addTyping(()=>{
+    addMsg('收到！用「年代记忆」需要您同意：<br>我会<b>上传位置和一张模糊小图</b>，用来找这个地方的老照片；<b>原图不会上传</b>，随时可以关。可以吗？');
+    addOpts([
+      {label:'✅ 同意，帮我找', cls:'primary', fn:"eraConsent()"},
+      {label:'💬 先聊点别的', fn:"chatSkipIntro()"},
+    ]);
+  });
+}
+function eraConsent(){
+  addMsg('✅ 同意',true);
+  addTyping(()=>{
+    addMsg('好嘞！再跟我说说，<b>这里以前是什么样的？</b><br>（比如："这是我上班的厂，门口有个大烟囱"）');
+    addOpts([
+      {label:'🎙 我说说这里以前的样子', cls:'primary', fn:"eraDescribe()"},
+    ]);
+  });
+}
+function eraDescribe(){
+  addMsg('这是我上班的纺织厂，门口有个大烟囱，工友都叫他"老烟囱"',true);
+  addTyping(()=>{
+    addMsg('我明白了！结合位置和您的描述，我找到了几张<b>辽宁路老纺织厂</b>的历史照片，您看看像不像记忆里的样子？');
+    addTyping(()=>{ addTcCandidates(); },800);
+  });
+}
+function addTcCandidates(){
+  const w=document.createElement('div');
+  w.className='msg';
+  w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"><div class="b-title">🖼 这几张，哪张最像您记忆里的？</div>'+
+    '<div class="tc-grid">'+
+      '<button class="tc-ph" onclick="tcPick(1)">🏭<span>老烟囱·1985</span></button>'+
+      '<button class="tc-ph" onclick="tcPick(2)">🚪<span>厂门·1982</span></button>'+
+      '<button class="tc-ph" onclick="tcPick(3)">🧵<span>车间·1987</span></button>'+
+      '<button class="tc-ph" onclick="tcPick(4)">🌇<span>厂区全景·1980</span></button>'+
+    '</div><div class="b-sub">带"年代示意图"角标 · 点一张最像的</div></div>';
+  chatBody().appendChild(w); scrollChat();
+}
+function tcPick(n){
+  document.querySelectorAll('.msg').forEach(m=>{ if(m.innerHTML.includes('tc-grid')) m.remove(); });
+  addMsg('这张像！就是它',true);
+  addTyping(()=>{ addContrastCard(); },700);
+}
+function addContrastCard(){
+  const w=document.createElement('div');
+  w.className='msg';
+  w.innerHTML='<div class="m-avatar">🌼</div><div class="bubble"><div class="b-title">⏳ 年代对照卡</div>'+
+    '<div class="tc-contrast">'+
+      '<div class="tcc-side"><div class="tcc-img">📷</div><div class="tcc-cap">现在的这里<br>2026 年</div></div>'+
+      '<div class="tcc-vs">⇄</div>'+
+      '<div class="tcc-side"><div class="tcc-img">🏭</div><div class="tcc-cap">当年的这里<br>1985 年</div></div>'+
+    '</div><div class="b-sub" style="margin-top:6px">年代示意图 · 仅供回忆参考</div></div>';
+  chatBody().appendChild(w); scrollChat();
+  addTyping(()=>{
+    addMsg('现在的这里，和当年的这里——<b>是不是很多话想说？</b>');
+    addTyping(()=>{
+      addMsg('讲讲那时候的事吧，我帮您收起来 🎙');
+      addRecBar();
+    });
+  });
+}
+function eraFinish(){
+  addFlower();
+  addTyping(()=>{
+    addMsg('收好啦！这张对照卡进了您的<b>「年代记忆」</b>，花园又开了一朵花 🌷');
+    addTyping(()=>{
+      addMsg('我帮您写了几句朋友圈文案，看看：');
+      addTyping(()=>{ addMsg('① "以前是厂子，现在是回忆。老烟囱不在了，故事还在。"<br>② "走到老厂门口，想起那年刚进厂的样子。一晃几十年。"'); },900);
+      addTyping(()=>{
+        addOpts([
+          {label:'📤 选一条发朋友圈', cls:'primary', fn:"showShare('era')"},
+          {label:'✍️ 再改改', fn:"eraFinish()"},
+          {label:'💬 先收着', fn:"chatSkipIntro()"},
+        ]);
+      });
+    });
+  });
+}
+
+/* ================= 分享 ================= */
+function showShare(kind){
+  if(kind==='story'){ document.getElementById('scPh').textContent='🔧'; document.getElementById('scTitle').textContent='车间里的日子'; document.getElementById('scSub').textContent=myName()+'的人生时光 · 工作'; }
+  else { document.getElementById('scPh').textContent='🏭'; document.getElementById('scTitle').textContent='现在的这里 ║ 当年的这里'; document.getElementById('scSub').textContent=myName()+'的年代记忆 · 1985'; }
+  show('shareOverlay');
+}
+function closeOverlay(){ hide('shareOverlay'); }
+function showShareLink(){ show('linkModal'); }
+function closeModal(id){ hide(id); }
+
+/* ================= 我的时光页（人生时光/年代记忆/看花园 → 跳转已接后端的网页版；原演示弹层保留 *_demo） ================= */
+function goLifePage(){ location.href='时光花园_网页版/time.html#life'; }
+function goEraPage(){ location.href='时光花园_网页版/time.html#era'; }
+function goGardenPage(){ location.href='时光花园_网页版/garden.html'; }
+function showLifeTimeline(){ goLifePage(); }
+function showLifeTimelineDemo(){
+  closeModal('lifeModal');
+  const t=document.getElementById('lifeTimeline');
+  t.innerHTML='';
+  LIFE_NODES.forEach((n,i)=>{
+    const d=document.createElement('div');
+    d.className='tl-item';
+    d.innerHTML='<div class="tl-dot'+(n.done?' done':'')+'"></div><div class="tl-name'+(n.done?' done':'')+'">'+
+      (i===2?'🔧 ':i===3?'💍 ':'')+n.name+'<span class="tl-story-count">'+n.count+' 个故事</span>'+
+      '<div style="font-size:12px;color:var(--ink-soft);font-weight:400">'+n.era+'</div></div>';
+    d.onclick=()=>{ closeModal('lifeModal'); if(i===2) lifeTellWork(); else if(n.name==='上学'){ addMsg('我想讲讲「'+n.name+'」',true); addTyping(()=>{ addMsg('好呀！'); lifeSpeak(); }); } else toast('「'+n.name+'」这站还没讲，点小辽开始吧'); switchTab(0); };
+    t.appendChild(d);
+  });
+  show('lifeModal');
+}
+function showEraCollection(){ goEraPage(); }
+function showEraCollectionDemo(){
+  closeModal('eraModal');
+  const t=document.getElementById('eraList');
+  t.innerHTML='';
+  const eras=[{name:'80 年代',desc:'车间里的日子 · 2 张对照卡',ph:'🏭'},{name:'下乡那几年',desc:'1 张对照卡',ph:'🌾'}];
+  eras.forEach(e=>{
+    const d=document.createElement('div');
+    d.className='era-item';
+    d.innerHTML='<div class="ei-ph">'+e.ph+'</div><div style="flex:1"><div class="ei-name">'+e.name+'</div><div class="ei-date">'+e.desc+'</div></div><div style="font-size:22px;color:var(--orange)">›</div>';
+    d.onclick=()=>{ closeModal('eraModal'); toast('「'+e.name+'」的对照卡（演示）'); switchTab(0); };
+    t.appendChild(d);
+  });
+  show('eraModal');
+}
+
+/* ================= 设置 ================= */
+function showSettings(){ refreshProfileCard(); show('settingsModal'); }
+function refreshProfileCard(){
+  const s=(id,txt)=>{ const el=document.getElementById(id); if(el) el.textContent=txt; };
+  s('setName',profile.name||'老张'); s('setEraLabel',eraLabel(profile.era)||'50后');
+  s('setGenderLabel',profile.gender==='男'?'叔叔':'阿姨'); s('setStyleLabel',styleLabel(profile.style)||'都行');
+}
+function editProfile(field){
+  if(field==='name'){ const v=prompt('您希望小辽怎么称呼您？',profile.name||'老张'); if(v&&v.trim()){ profile.name=v.trim(); saveProfile(); toast('好，以后叫您「'+profile.name+'」😊'); } }
+  else if(field==='era'){ const v=prompt('您是哪一年出生的？\n（比如：55年/1955年/五十年代）',''); if(v&&v.trim()){ profile.era=parseEra(v.trim()); saveProfile(); toast('记下啦：'+eraLabel(profile.era)); } }
+  else if(field==='gender'){ const g=confirm('您是叔叔还是阿姨？\n\n确定=叔叔 取消=阿姨'); profile.gender=g?'男':'女'; saveProfile(); toast('记下啦：'+myTitle()); }
+  else if(field==='style'){ const v=prompt('您喜欢小辽怎么陪您聊天？\n（话多一点/安静点/都行）','都行'); if(v){ profile.style=parseStyle(v.trim()); saveProfile(); toast('记下啦：'+styleLabel(profile.style)); } }
+  refreshProfileCard();
+}
+
+/* ================= 快捷 & 自由输入 ================= */
+function gotoGarden(){ goGardenPage(); }
+function quickSend(txt){
+  addMsg(txt,true);
+  if(txt.includes('人生时光')) startLife();
+  else if(txt.includes('年代记忆')) startEraContrast();
+  else if(txt.includes('花园')){ addTyping(()=>{ addGardenMini(); addMsg('想看大花园，点下面「花园」那个按钮就行 🌼'); }); }
+  else idleChat();
+}
+function sendText(){
+  const inp=document.getElementById('chatInput');
+  const v=inp.value.trim();
+  if(!v) return;
+  inp.value='';
+  if(awaitingInput==='name'||awaitingInput==='era'||awaitingInput==='gender'||awaitingInput==='style'){
+    const f=awaitingInput; awaitingInput=null; inp.placeholder='和小辽说点什么…（点🎙直接说话）';
+    parseVoiceAnswer(f,v); return;
+  }
+  addMsg(v,true);
+  llmChat(v);
+}
+function chatSkipIntro(){
+  addMsg('💬 随便聊聊天',true);
+  addTyping(()=>{
+    addMsg('好呀，那咱们就聊聊天 🌼 想说什么都行，我在呢。');
+    addTyping(()=>{ addMsg('今儿个感觉咋样？'); addOpts([
+      {label:'😊 挺好的',fn:"reply(1,'happy')"},
+      {label:'😐 一般般',fn:"reply(1,'mid')"},
+      {label:'😔 不太开心',fn:"reply(1,'sad')"},
+    ]); });
+  });
+}
+/* ================= RAG：知识库检索（CBT-Agent-RAG） ================= */
+let ragData = null;        // 检索索引
+let ragLoading = null;     // 加载 Promise
+
+function loadRag(){
+  if (ragData) return Promise.resolve(ragData);
+  if (ragLoading) return ragLoading;
+  ragLoading = fetch('rag_index.json')
+    .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(d=>{ ragData=d; return d; })
+    .catch(e=>{ ragLoading=null; console.warn('RAG 索引加载失败（无 rag_index.json 时小辽用通用回复）', e.message); return null; });
+  return ragLoading;
+}
+
+/* 检索：用户输入命中哪些关键词 → 取对应知识片段（对话指南优先，避免 OCR 噪声） */
+function ragSearch(text, maxSeg=3){
+  if(!ragData) return [];
+  const segs = ragData.segments || [];
+  const idx = ragData.index || {};
+  const scores = {};
+  for(const kw of Object.keys(idx)){
+    if(text.includes(kw)){
+      idx[kw].forEach(i=>{ scores[i] = (scores[i]||0) + 1; });
+    }
+  }
+  const ranked = Object.keys(scores).map(Number).sort((a,b)=>scores[b]-scores[a]);
+  if(ranked.length===0) return [];
+  // 优先取"对话指南"的段落（小辽专属方法），再补知识库
+  const guideHits = ranked.filter(i=>segs[i] && segs[i][0]==='对话指南');
+  const otherHits = ranked.filter(i=>!guideHits.includes(i));
+  const picked = [...guideHits, ...otherHits].slice(0, maxSeg);
+  return picked.map(i=>segs[i]).filter(Boolean);
+}
+
+/* 自由聊天：RAG 检索 → 拼上下文 → DeepSeek 回复 */
+function llmChat(userText){
+  addTyping(()=>{
+    loadRag().then(()=>{
+      const docs = ragSearch(userText);
+      let system = 
+        '你是"小辽"，时光花园里陪伴老人的 AI 伙伴，30多岁，像一位贴心的晚辈。'+
+        '用户是城市独居中老年人（50+）。\n'+
+        '【说话风格】口语化短句，温暖肯定；不说教、不劝慰（禁"你要坚强""想开点""别难过"）；'+
+        '不用"叔叔阿姨大爷奶奶"这类称谓，用"您"或画像里的名字（如老赵）更亲切；表情克制（🌼偶尔）。'+
+        '【禁止】不要用括号写动作/状态描写（如"（轻轻放下茶杯）"），不要描写神态、环境，直接说话。\n'+
+        '【陪伴方式】倾听优先，先接情绪再谈事情；围绕两大叙事引导讲述：人生时光（我的一辈子）和年代记忆（我最怀念的年代）；'+
+        '讲完给一句"换个说法"式肯定。\n'+
+        '【边界】不冒充专业人士；老人表达持续悲伤/绝望/轻生倾向时，停止分析，温和引导联系家人或就医；'+
+        '不编造、不评判老人的人生选择。\n'+
+        '【禁止编造往事·重要】绝不虚构老人的过去。只有老人在本次对话里明确说过的内容，才能回引；'+
+        '不要编造"您上次说…""您之前提过…""您是不是…过"这类没发生过的细节。想不起来就不提，直接陪老人聊当下。\n'+
+        '【CBT 对话精要·不露痕迹】①先接情绪再谈事情 ②命名情绪（"是不是像心里堵着一块石头？"）'+
+        '③区分事实和想法（"这是确确实实发生的，还是您心里这么觉得？"）④给想法找证据（"有没有别的时候没这么糟？"）'+
+        '⑤换个说法（"那会儿您已经尽力了"）⑥行为激活（低落时提议"出去走走看看太阳？"）⑦收得住（不想谈就"好，不说了，我陪着您"）。'+
+        '绝不说"这是认知行为疗法""根据心理学"。';
+      if(docs.length>0){
+        const ctx = docs.map((d,i)=>`[资料${i+1}：${d[0]}]\n${d[1]}`).join('\n\n');
+        system += '\n\n以下是相关知识库资料（CBT 方法/情绪知识/对话指南），请自然地运用其中的方法回应老人，不要生硬引用、不要说"根据资料"：\n\n'+ctx;
+      }
+      // 记录用户这句到历史
+      chatHistory.push({role:'user', content:userText});
+      if(chatHistory.length>MAX_HISTORY) chatHistory=chatHistory.slice(-MAX_HISTORY);
+      return askDeepSeek(system, userText, chatHistory.slice(0,-1));  // 历史不含当前这句（已单独发）
+    })
+    .then(reply=>{
+      if(reply){
+        chatHistory.push({role:'assistant', content:reply});
+        if(chatHistory.length>MAX_HISTORY) chatHistory=chatHistory.slice(-MAX_HISTORY);
+        // 小辽回复：语音条（自动播放）+ 一行文字（addMsg 语音模式）
+        const wrapper=addMsg(reply, false, true);
+        const vm=wrapper.querySelector('.voice-msg');
+        if(vm) speakReply(reply, vm, true);
+      }
+      else idleChat();
+    })
+    .catch(()=>idleChat());
+  });
+}
+function idleChat(){
+  addTyping(()=>{
+    const chatty=['嗯嗯，我听着呢 🌼 您接着说！','然后呢？我特别想听。','这事我记得，您再讲讲？'];
+    const quiet=['嗯，我在听。','您慢慢说。','我陪着您。'];
+    const any=['嗯嗯，我听着呢 🌼','你说，我在。','要不要去花园坐坐？'];
+    const pool=profile.style==='chatty'?chatty:profile.style==='quiet'?quiet:any;
+    const txt=pool[Math.floor(Math.random()*pool.length)];
+    const wrapper=addMsg(txt, false, true);
+    const vm=wrapper.querySelector('.voice-msg');
+    if(vm) speakReply(txt, vm, true);
+  });
+}
+
+/* ================= 初始化 ================= */
+window.addEventListener('DOMContentLoaded',()=>{
+  loadProfile();
+  const layer=document.getElementById('flowerLayer');
+  [40,160].forEach(x=>{ const b=document.createElement('span'); b.className='bud'; b.textContent='🌱'; b.style.left=x+'px'; b.style.top=(120+Math.floor(Math.random()*30))+'px'; layer.appendChild(b); });
+  [100,200,280].forEach((x,i)=>{ const f=document.createElement('span'); f.className='flower'; f.textContent=FLOWERS[i]; f.style.left=x+'px'; f.style.top=(110+i*25)+'px'; layer.appendChild(f); flowerN++; });
+  const fc=document.getElementById('flowerCount'); if(fc) fc.textContent=flowerN;
+  refreshProfileCard();
+  if(dsKey){
+    fetch(DS_API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+dsKey},body:JSON.stringify({model:DS_MODEL,messages:[{role:'user',content:'ping'}],max_tokens:1,stream:false})})
+    .then(r=>{ if(r.ok) console.log('✅ DeepSeek 浏览器直连正常'); else console.warn('⚠️ DeepSeek 返回 '+r.status); })
+    .catch(()=>console.warn('⚠️ 浏览器无法直连 DeepSeek，小辽将使用本地规则理解'));
+  }
+  boot();
+});
+</script>
+</body>
+</html>
