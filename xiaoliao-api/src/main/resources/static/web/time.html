@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时光花园 · 我的时光</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"><span id="sbTime">09:41</span><span>🔋 ▮▮▮</span></div>
+  <div class="notch"></div>
+
+  <div class="screen">
+    <div class="page-head">
+      <div class="ph-title">⏳ 我的时光</div>
+      <a class="ph-back" href="javascript:;" onclick="location.href='../chat.html?t='+Date.now();return false;" style="font-size:15px;padding:5px 12px;border-radius:999px;background:rgba(0,0,0,.06);white-space:nowrap" title="返回聊天">‹ 返回聊天</a>
+    </div>
+    <div style="padding:0 18px">
+      <button class="btn btn-gold" onclick="goMakeVideo()" style="margin-top:12px">🎬 找小辽做新视频</button>
+      <div class="seg" id="segTop">
+        <div data-tab="life" class="on">👤 人生时光</div>
+        <div data-tab="era">🕰 年代记忆</div>
+      </div>
+    </div>
+
+    <!-- 人生时光（节点链） -->
+    <div class="page-body" id="viewLife">
+      <div id="lifeList"><div class="empty-tip">正在加载时光轴…</div></div>
+      <button class="btn btn-soft" id="addNodeBtn" style="margin-top:14px">＋ 添加一段（自定义节点）</button>
+    </div>
+
+    <!-- 年代记忆 -->
+    <div class="page-body" id="viewEra" style="display:none">
+      <div id="eraList"><div class="empty-tip">正在加载年代列表…</div></div>
+      <button class="btn btn-soft" id="addEraBtn" style="margin-top:14px" onclick="addEraBtnHandler()">＋ 新建年代记忆</button>
+    </div>
+  </div>
+
+  <!-- 底部切换：做视频 / 去广场 -->
+  <div class="tabbar">
+    <a href="javascript:;" onclick="goMakeVideo()"><span class="tb-emoji">🎬</span>做视频</a>
+    <a href="javascript:;" onclick="location.href='plaza.html?t='+Date.now();return false;"><span class="tb-emoji">🏘️</span>去广场</a>
+  </div>
+
+  <!-- 详情全屏层 -->
+  <div class="layer" id="detailLayer" style="display:none">
+    <div class="layer-head">
+      <span class="ph-back" onclick="closeDetail()">‹</span>
+      <div class="ph-title" id="detailTitle">详情</div>
+    </div>
+    <div class="layer-body" id="detailBody"></div>
+  </div>
+
+  <!-- 添加节点 -->
+  <div class="modal-mask" id="nodeMask">
+    <div class="modal-box">
+      <div class="modal-title">＋ 添加一段时光</div>
+      <div class="modal-sub">给这段起个名字，比如“下乡那几年”</div>
+      <div class="field-label">名称</div>
+      <input class="text-input" id="nodeName" maxlength="64" placeholder="如：下乡那几年">
+      <div class="field-label">年份（可选）</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="text-input" id="nodeFrom" type="number" placeholder="起始年，如 1968" style="flex:1">
+        <span>—</span>
+        <input class="text-input" id="nodeTo" type="number" placeholder="结束年" style="flex:1">
+      </div>
+      <button class="btn btn-gold" onclick="saveNewNode()">收好这段</button>
+      <button class="btn btn-ghost" onclick="hideMask('nodeMask')">取消</button>
+    </div>
+  </div>
+
+  <!-- 新建年代 -->
+  <div class="modal-mask" id="eraMask">
+    <div class="modal-box">
+      <div class="modal-title">🕰 新建年代记忆</div>
+      <div class="modal-sub">说说那是哪段日子，比如“我最怀念的80年代”</div>
+      <div class="opt-chips" id="eraPresets">
+        <span class="opt-chip" data-v="我最怀念的80年代">80年代</span>
+        <span class="opt-chip" data-v="下乡那几年">下乡那几年</span>
+        <span class="opt-chip" data-v="老厂岁月">老厂岁月</span>
+        <span class="opt-chip" data-v="进城打拼的日子">进城打拼</span>
+      </div>
+      <div class="field-label">年代名</div>
+      <input class="text-input" id="eraName" maxlength="64" placeholder="自己起个名也行">
+      <button class="btn btn-gold" onclick="saveNewEra()">收好这段</button>
+      <button class="btn btn-ghost" onclick="hideMask('eraMask')">取消</button>
+    </div>
+  </div>
+
+  <!-- 分享家人 -->
+  <div class="modal-mask" id="shareMask">
+    <div class="modal-box">
+      <div class="modal-title">👨‍👩‍👧 请家人帮忙补全</div>
+      <div class="modal-sub">后端会生成一个 7 天内有效的免登录分享 token（亲友端页面待 H5 另行提供）</div>
+      <div class="polish-card" id="shareBox" style="word-break:break-all"></div>
+      <button class="btn btn-gold" onclick="copyShare()">📋 复制链接</button>
+      <button class="btn btn-ghost" onclick="hideMask('shareMask')">关闭</button>
+    </div>
+  </div>
+
+  <!-- 年代记忆：传一张照片 → 小辽写文案 -->
+  <div class="modal-mask" id="eraPhotoMask">
+    <div class="modal-box">
+      <div class="modal-title">📷 传张照片，让小辽写文案</div>
+      <div class="modal-sub" id="eraPhotoSub">挑一张那个年代的照片，再说两句，小辽帮您把话写顺、写暖。</div>
+      <input type="file" id="eraPhotoFile" accept="image/*" style="display:none">
+      <button class="btn btn-soft" onclick="pickEraPhoto()">🖼 选一张照片</button>
+      <div id="eraPhotoPrevBox" style="display:none;margin-top:8px">
+        <img id="eraPhotoPrev" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px" alt="">
+      </div>
+      <div class="field-label">说说这张照片（哪年、在哪儿、想起了啥）</div>
+      <textarea class="text-input" id="eraPhotoDesc" maxlength="2000" placeholder="比如：1978 年夏天，在厂门口拍的这张……"></textarea>
+      <button class="btn btn-soft" id="eraPhotoMicBtn" onclick="micEraPhoto()">🎙 说话转文字</button>
+      <button class="btn btn-gold" onclick="genEraPhotoCopies()">✍️ 让小辽写几句</button>
+      <div id="eraPhotoOut"></div>
+      <button class="btn btn-ghost" onclick="hideMask('eraPhotoMask')">关闭</button>
+    </div>
+  </div>
+
+  <!-- 年代记忆：讲个故事 -->
+  <div class="modal-mask" id="eraStoryMask">
+    <div class="modal-box">
+      <div class="modal-title">📖 讲讲这个年代的故事</div>
+      <div class="modal-sub" id="eraStorySub">想到哪儿说到哪儿，小辽帮您记下来。</div>
+      <div class="field-label">标题（可选）</div>
+      <input class="text-input" id="eraStoryTitle" maxlength="64" placeholder="如：那年夏天的一场雨">
+      <div class="field-label">故事</div>
+      <textarea class="text-input" id="eraStoryText" maxlength="5000" placeholder="点下面话筒说，或者直接打字……"></textarea>
+      <button class="btn btn-soft" id="eraStoryMicBtn" onclick="micEraStory()">🎙 说话转文字</button>
+      <button class="btn btn-gold" onclick="saveEraStory()">💾 收进这个年代</button>
+      <button class="btn btn-ghost" onclick="hideMask('eraStoryMask')">关闭</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/time.js"></script>
+</body>
+</html>

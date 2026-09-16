@@ -12,7 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 用户服务 — 企微用户自动注册 + JWT 令牌管理
@@ -115,6 +118,50 @@ public class UserService {
      */
     public User getById(String userId) {
         return userMapper.selectById(userId);
+    }
+
+    /**
+     * 批量取昵称（广场作品作者名、亲友协作等展示用）
+     * <p>昵称为空或仍是默认占位时，返回 {@code 小辽朋友}，不把空名字透给前端。
+     *
+     * @param userIds 用户 id 集合
+     * @return userId → 展示名
+     */
+    public Map<String, String> nicknameMap(Collection<String> userIds) {
+        Map<String, String> map = new HashMap<>();
+        if (userIds == null || userIds.isEmpty()) {
+            return map;
+        }
+        for (User u : userMapper.selectBatchIds(userIds)) {
+            String n = u.getNickname();
+            map.put(u.getId(), (n == null || n.isBlank()) ? DEFAULT_NICKNAME : n);
+        }
+        return map;
+    }
+
+    /**
+     * 确保 userId 在 users 表存在（联调 mock/多测试用户：清库后首个请求自动补建，避免 401）
+     */
+    public User ensureById(String userId) {
+        User u = userMapper.selectById(userId);
+        if (u != null) {
+            return u;
+        }
+        u = new User();
+        u.setId(userId);
+        u.setOpenid("mock_" + userId);
+        u.setNickname("测试用户");
+        u.setCreatedAt(LocalDateTime.now());
+        u.setUpdatedAt(LocalDateTime.now());
+        u.setLastActiveAt(LocalDateTime.now());
+        try {
+            userMapper.insert(u);
+            log.info("mock 测试用户自动建号: userId={}", userId);
+        } catch (org.springframework.dao.DuplicateKeyException e) {
+            // 并发首请求都来建号：已存在则直接复用
+            u = userMapper.selectById(userId);
+        }
+        return u;
     }
 
     /**

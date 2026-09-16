@@ -24,6 +24,6 @@ public class NodeVO {
 
     private Integer yearTo;
 
-    /** 节点下故事数 */
-    private Long storyCount;
+    /** 节点下视频作品数 */
+    private Long videoCount;
 }

@@ -21,4 +21,9 @@ public class ExportVO {
     private List<MomentVO> moments;
 
     private List<ConsentVO> consents;
+
+    private List<VideoVO> videos;
+
+    /** 广场上发布过的作品 */
+    private List<PlazaWorkVO> plazaWorks;
 }

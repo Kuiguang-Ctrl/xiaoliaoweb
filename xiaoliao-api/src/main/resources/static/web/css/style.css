@@ -119,11 +119,20 @@ textarea.text-input { resize:vertical; min-height:96px; line-height:1.6; }
 .tl-years { font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
 .tl-count { margin-left:auto; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; background:#F7ECD4; border-radius:999px; padding:3px 9px; align-self:center; }
 
+/* 节点行：改名 / 删除 */
+.tl-acts { display:flex; gap:6px; margin-top:6px; }
+.tl-btn { border:1px solid #E0C795; background:#FFF; color:#7a5a28; border-radius:999px; padding:3px 10px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+.tl-btn.danger { color:#B5553B; border-color:#E4B9A8; }
+.tl-btn:active { transform:scale(.95); }
+
 /* 故事卡片 */
 .story-card { background:#FFFDF6; border:1px solid var(--line); border-radius:14px; padding:11px 13px; margin-top:10px; }
 .story-card .sc-date { font-size:11px; color:var(--ink-soft); }
 .story-card .sc-txt { font-size:14.5px; line-height:1.6; margin-top:5px; }
 .story-card .sc-polish { margin-top:7px; font-size:13.5px; color:#7a5a28; background:#FBF4E2; border-radius:10px; padding:8px 10px; line-height:1.6; }
+.story-card .sc-title { font-size:15px; font-weight:800; color:var(--ink); margin-bottom:2px; }
+.story-card .sc-acts { display:flex; flex-wrap:wrap; }
+.btn-mini.danger { background:#F7E7E2; color:#B3543C; }
 .photo-thumb { width:72px; height:72px; object-fit:cover; border-radius:12px; border:1px solid var(--line); }
 .photo-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
 .empty-tip { text-align:center; color:var(--ink-soft); font-size:13px; padding:26px 0 14px; line-height:1.7; }
@@ -188,3 +197,44 @@ textarea.text-input { resize:vertical; min-height:96px; line-height:1.6; }
 .layer-body { flex:1; overflow-y:auto; padding:12px 18px 24px; scrollbar-width:none; }
 .layer-body::-webkit-scrollbar { display:none; }
 .layer-body .btn { margin-bottom:2px; }
+
+/* ============ 广场 ============ */
+.like-sum { background:linear-gradient(135deg,#FBE9D2,#F6D9BE); border:1px solid #EAD9AE; border-radius:18px; padding:14px 16px; margin-top:14px; }
+.like-sum-row { display:flex; align-items:center; gap:8px; }
+.ls-ico { font-size:20px; }
+.ls-label { font-size:15px; font-weight:800; flex:1; }
+.ls-num { font-size:24px; font-weight:900; color:#C96E1F; }
+.like-sum-note { font-size:12px; color:#8a5a1a; margin-top:6px; line-height:1.5; }
+
+/* 双列瀑布流容器：两列各自向下生长，按高度分卡片 */
+#plazaFeed { display:flex; align-items:flex-start; gap:8px; margin-top:2px; }
+.pl-col { flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; }
+.pl-card { background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(107,79,58,.08); }
+.pl-cover { position:relative; display:flex; align-items:center; justify-content:center; }
+.pl-cov-emoji { font-size:38px; text-shadow:0 2px 6px rgba(0,0,0,.08); }
+.pl-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.pl-video { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#2b2320; }
+.pl-badge { position:absolute; left:7px; top:7px; font-size:10px; font-weight:700; color:#7a4a12; background:rgba(255,247,230,.92); border-radius:999px; padding:1px 7px; }
+.pl-del { position:absolute; right:6px; top:6px; width:22px; height:22px; border-radius:50%; border:none; background:rgba(60,45,25,.5); color:#fff; font-size:11px; line-height:1; cursor:pointer; font-family:inherit; }
+.pl-del:active { transform:scale(.92); }
+.pl-dur { position:absolute; right:7px; bottom:7px; font-size:10px; color:#fff; background:rgba(60,45,25,.55); border-radius:999px; padding:1px 7px; }
+.pl-txt { font-size:13.5px; font-weight:700; line-height:1.45; padding:8px 10px 2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.pl-user { display:flex; align-items:center; gap:6px; padding:4px 10px 10px; }
+.pl-ava { width:20px; height:20px; border-radius:50%; background:#F6DFAE; color:#8a6a3a; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pl-name { font-size:11.5px; color:var(--ink-soft); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pl-like { border:1px solid #E0C795; background:#FFF; color:#7a5a28; border-radius:999px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }
+.pl-like b { font-size:12px; }
+.pl-like.on { background:#FBE9D2; border-color:#E8A75C; color:#B85E0E; }
+.pl-like:active { transform:scale(.94); }
+
+/* ===== 视频作品（time 页视频流） ===== */
+.wkv-item { background:#FBF7EC; border:1px solid #E3D9C2; border-radius:14px; padding:8px; margin-bottom:12px; }
+.wkv-head { display:flex; gap:10px; cursor:pointer; align-items:center; }
+.wkv-ph { width:112px; height:76px; border-radius:8px; overflow:hidden; flex-shrink:0; background:#E9DFC8; display:flex; align-items:center; justify-content:center; font-size:26px; }
+.wkv-ph img { width:100%; height:100%; object-fit:cover; display:block; }
+.wkv-title { font-size:16px; font-weight:700; color:#6B4F3A; }
+.wkv-meta { font-size:12px; color:#8A6F55; margin-top:3px; }
+.wkv-body { display:none; margin-top:8px; }
+.wkv-body.open { display:block; }
+.wkv-video { width:100%; max-height:320px; border-radius:10px; background:#000; display:block; }
+.wkv-caption { font-size:14px; line-height:1.7; color:#6B4F3A; background:#F5EFE0; border-radius:10px; padding:10px 12px; margin-top:8px; white-space:pre-wrap; }

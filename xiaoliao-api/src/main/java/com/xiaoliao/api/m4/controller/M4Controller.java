@@ -3,11 +3,14 @@ package com.xiaoliao.api.m4.controller;
 import com.xiaoliao.api.config.AuthContext;
 import com.xiaoliao.api.m4.dto.ConsentRequest;
 import com.xiaoliao.api.m4.dto.EraRequest;
+import com.xiaoliao.api.m4.dto.GenImageRequest;
 import com.xiaoliao.api.m4.dto.HelpSubmitRequest;
 import com.xiaoliao.api.m4.dto.MatchImageRequest;
 import com.xiaoliao.api.m4.dto.MomentGenerateRequest;
+import com.xiaoliao.api.m4.dto.MomentPhotoRequest;
 import com.xiaoliao.api.m4.dto.NodeRequest;
 import com.xiaoliao.api.m4.dto.PhotoUploadRequest;
+import com.xiaoliao.api.m4.dto.PlazaPublishRequest;
 import com.xiaoliao.api.m4.dto.StorySaveRequest;
 import com.xiaoliao.api.m4.service.M4Service;
 import com.xiaoliao.api.m4.vo.ConsentVO;
@@ -17,10 +20,14 @@ import com.xiaoliao.api.m4.vo.GardenVO;
 import com.xiaoliao.api.m4.vo.HelpDetailVO;
 import com.xiaoliao.api.m4.vo.MatchResultVO;
 import com.xiaoliao.api.m4.vo.MomentVO;
+import com.xiaoliao.api.m4.vo.MomentPhotoVO;
 import com.xiaoliao.api.m4.vo.NodeVO;
 import com.xiaoliao.api.m4.vo.PhotoVO;
+import com.xiaoliao.api.m4.vo.PlazaFeedVO;
+import com.xiaoliao.api.m4.vo.PlazaWorkVO;
 import com.xiaoliao.api.m4.vo.ShareHelpVO;
 import com.xiaoliao.api.m4.vo.StoryVO;
+import com.xiaoliao.api.m4.vo.VideoVO;
 import com.xiaoliao.api.metrics.ApiMetric;
 import com.xiaoliao.common.dto.Result;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,6 +45,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -81,6 +89,16 @@ public class M4Controller {
         return Result.ok(m4Service.matchImage(userId, request));
     }
 
+    @Operation(summary = "对话内文生图", description = "小辽根据老人描述生成一张照片（qwen-image），图片落盘 uploads/images；保存到照片库走 POST /photos source=gen")
+    @PostMapping("/gen-image")
+    @ApiMetric("m4.gen_image")
+    public Result<Map<String, Object>> genImage(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @Valid @RequestBody GenImageRequest request) {
+        return Result.ok("画好啦", m4Service.genImage(userId, request));
+    }
+
+    // ---------- 故事 ----------
     // ---------- 故事 ----------
 
     @Operation(summary = "保存故事", description = "人生时光节点下或年代记忆下，原文+润色版")
@@ -95,8 +113,83 @@ public class M4Controller {
     @GetMapping("/stories")
     public Result<List<StoryVO>> listStories(
             @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
-            @RequestParam(required = false) Long nodeId) {
-        return Result.ok(m4Service.listStories(userId, nodeId));
+            @RequestParam(required = false) Long nodeId,
+            @RequestParam(required = false) Long eraId) {
+        return Result.ok(m4Service.listStories(userId, nodeId, eraId));
+    }
+
+    @Operation(summary = "删除故事", description = "删除节点下/年代下的一条故事")
+    @DeleteMapping("/stories/{id}")
+    public Result<Void> deleteStory(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @PathVariable Long id) {
+        m4Service.deleteStory(userId, id);
+        return Result.ok("删除成功", null);
+    }
+
+    @Operation(summary = "保存回忆作品（视频作品）", description = "照片组+文案+标题+配乐一次性提交，自动挂到人生时光节点或年代记忆")
+    @PostMapping(value = "/works", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result<Map<String, Object>> saveWork(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @RequestParam("destKind") String destKind,
+            @RequestParam(required = false) Long nodeId,
+            @RequestParam(required = false) String nodeLabel,
+            @RequestParam(required = false) String eraName,
+            @RequestParam(required = false) String title,
+            @RequestParam("text") String text,
+            @RequestParam(required = false) String music,
+            @RequestParam(value = "photos", required = false) MultipartFile[] photos) {
+        return Result.ok("作品收好了",
+                m4Service.saveWork(userId, destKind, nodeId, nodeLabel, eraName, title, text, music,
+                        photos == null ? java.util.Collections.emptyList() : java.util.Arrays.asList(photos)));
+    }
+
+    // ---------- 视频作品（后端合成） ----------
+
+    @Operation(summary = "上传素材并合成视频作品", description = "照片(1~5)+字幕数组+标题+文案+可选配乐音频，ffmpeg 合成 mp4 后挂到人生时光节点或年代记忆")
+    @PostMapping(value = "/videos", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result<Map<String, Object>> saveVideo(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @RequestParam("destKind") String destKind,
+            @RequestParam(required = false) Long nodeId,
+            @RequestParam(required = false) String nodeLabel,
+            @RequestParam(required = false) String eraName,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String caption,
+            @RequestParam(value = "captions", required = false) String[] captions,
+            @RequestParam(value = "photos", required = false) MultipartFile[] photos,
+            @RequestParam(value = "bgm", required = false) MultipartFile bgm) {
+        return Result.ok("视频作品收好了",
+                m4Service.saveVideo(userId, destKind, nodeId, nodeLabel, eraName, title, caption,
+                        photos == null ? java.util.Collections.emptyList() : java.util.Arrays.asList(photos),
+                        captions == null ? java.util.Collections.emptyList() : java.util.Arrays.asList(captions),
+                        bgm));
+    }
+
+    @Operation(summary = "视频作品列表", description = "可按人生时光节点或年代记忆过滤")
+    @GetMapping("/videos")
+    public Result<List<VideoVO>> listVideos(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @RequestParam(required = false) Long nodeId,
+            @RequestParam(required = false) Long eraId) {
+        return Result.ok(m4Service.listVideos(userId, nodeId, eraId));
+    }
+
+    @Operation(summary = "视频作品详情")
+    @GetMapping("/videos/{id}")
+    public Result<VideoVO> getVideo(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @PathVariable Long id) {
+        return Result.ok(m4Service.getVideo(userId, id));
+    }
+
+    @Operation(summary = "删除视频作品")
+    @DeleteMapping("/videos/{id}")
+    public Result<Void> deleteVideo(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @PathVariable Long id) {
+        m4Service.deleteVideo(userId, id);
+        return Result.ok("删除成功", null);
     }
 
     // ---------- 朋友圈文案 ----------
@@ -108,6 +201,16 @@ public class M4Controller {
             @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
             @Valid @RequestBody MomentGenerateRequest request) {
         return Result.ok("文案写好了，看看哪条顺眼", m4Service.generateMoments(userId, request));
+    }
+
+    @Operation(summary = "照片+描述生成朋友圈文案",
+            description = "老人发一张照片、说说照片里的故事，小辽据此改写 3 条朋友圈文案（AI 优先，失败自动规则兜底）；照片与故事默认落库，网页/小程序/其他页面共用这一个入口")
+    @PostMapping("/moments/photo")
+    @ApiMetric("m4.moments.photo")
+    public Result<MomentPhotoVO> generateMomentsFromPhoto(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @Valid @RequestBody MomentPhotoRequest request) {
+        return Result.ok("文案写好了，看看哪条顺眼", m4Service.generateMomentsFromPhoto(userId, request));
     }
 
     @Operation(summary = "我的文案列表")
@@ -260,6 +363,44 @@ public class M4Controller {
             @PathVariable Long id) {
         return Result.ok("分享已作废", m4Service.revokeShareHelp(userId, id));
     }
+    // ---------- 花园 ----------
+
+    @Operation(summary = "广场作品流", description = "大家的新作品（含我发布的），附我收到的赞与我的作品数")
+    @GetMapping("/plaza/feed")
+    @ApiMetric("m4.plaza.feed")
+    public Result<PlazaFeedVO> plazaFeed(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @RequestParam(required = false) Integer limit) {
+        return Result.ok(m4Service.plazaFeed(userId, limit));
+    }
+
+    @Operation(summary = "发布作品到广场", description = "老人从自己的视频作品里挑一件挂到广场，供大家浏览点赞")
+    @PostMapping("/plaza/works")
+    @ApiMetric("m4.plaza.publish")
+    public Result<PlazaWorkVO> publishPlazaWork(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @Valid @RequestBody PlazaPublishRequest request) {
+        return Result.ok("作品挂到广场啦", m4Service.publishPlazaWork(userId, request.getVideoId(), request.getTitle()));
+    }
+
+    @Operation(summary = "从广场撤下作品", description = "只撤广场上的展示，不影响「我的作品」里的原件")
+    @DeleteMapping("/plaza/works/{id}")
+    public Result<Void> unpublishPlazaWork(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @PathVariable Long id) {
+        m4Service.unpublishPlazaWork(userId, id);
+        return Result.ok("已经撤下了", null);
+    }
+
+    @Operation(summary = "广场点赞/取消点赞", description = "同一人重复调用即取消（toggle），返回最新点赞数")
+    @PostMapping("/plaza/works/{id}/like")
+    @ApiMetric("m4.plaza.like")
+    public Result<PlazaWorkVO> togglePlazaLike(
+            @Parameter(hidden = true) @RequestAttribute(AuthContext.USER_ID_ATTR) String userId,
+            @PathVariable Long id) {
+        return Result.ok(m4Service.togglePlazaLike(userId, id));
+    }
+
     // ---------- 花园 ----------
 
     @Operation(summary = "我的花园计数", description = "开花数：故事/节点/年代/照片/已选文案")

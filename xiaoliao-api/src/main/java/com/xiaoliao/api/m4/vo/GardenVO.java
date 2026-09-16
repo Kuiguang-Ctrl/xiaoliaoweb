@@ -8,8 +8,8 @@ import lombok.Data;
 @Data
 public class GardenVO {
 
-    /** 故事总数（一朵花） */
-    private Long storyCount;
+    /** 视频作品总数（一朵花） */
+    private Long videoCount;
 
     /** 人生时光节点数 */
     private Long nodeCount;

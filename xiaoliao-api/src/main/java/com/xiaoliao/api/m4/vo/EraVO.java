@@ -14,6 +14,6 @@ public class EraVO {
 
     private Long coverPhotoId;
 
-    /** 年代下故事/对照卡数 */
-    private Long storyCount;
+    /** 年代下视频作品数 */
+    private Long videoCount;
 }

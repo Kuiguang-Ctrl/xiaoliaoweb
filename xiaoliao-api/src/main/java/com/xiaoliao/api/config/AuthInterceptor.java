@@ -1,6 +1,7 @@
 package com.xiaoliao.api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xiaoliao.api.user.UserService;
 import com.xiaoliao.api.util.TokenUtil;
 import com.xiaoliao.common.dto.Result;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +27,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     private final TokenUtil tokenUtil;
     private final ObjectMapper objectMapper;
+    private final UserService userService;
 
     /** 鉴权开关：true=校验 token；false=跳过（联调用） */
     @Value("${xiaoliao.auth.enabled:true}")
@@ -34,6 +36,9 @@ public class AuthInterceptor implements HandlerInterceptor {
     /** 跳过鉴权时使用的固定用户 id */
     @Value("${xiaoliao.auth.mock-user-id:}")
     private String mockUserId;
+
+    /** 联调多用户测试头：前端（时光花园网页版）用它区分不同测试用户，保证数据互不可见 */
+    public static final String MOCK_USER_HEADER = "X-Mock-User-Id";
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -54,9 +59,23 @@ public class AuthInterceptor implements HandlerInterceptor {
                 return false;
             }
         } else {
-            // 联调跳过鉴权：优先用请求头里的 token，没有则用 mock 用户
-            userId = (headerUserId != null) ? headerUserId : mockUserId;
-            log.warn("鉴权已关闭(dev)，userId={}", userId);
+            // 联调跳过鉴权：token → X-Mock-User-Id（多测试用户隔离）→ 固定 mock 用户
+            String mockHeaderId = request.getHeader(MOCK_USER_HEADER);
+            mockHeaderId = (mockHeaderId == null || mockHeaderId.isBlank()) ? null : mockHeaderId.trim();
+            if (mockHeaderId != null && !mockHeaderId.matches("[A-Za-z0-9_-]{1,64}")) {
+                log.warn("{} 不合法，忽略: [{}]", MOCK_USER_HEADER, mockHeaderId);
+                mockHeaderId = null;
+            }
+            userId = (headerUserId != null) ? headerUserId : (mockHeaderId != null ? mockHeaderId : mockUserId);
+            log.warn("鉴权已关闭(dev)，userId={}, mockHeader={}", userId, mockHeaderId);
+            // 联调模式：用户不存在时自动补建（清库/新建测试用户后首个请求即可用，不再 401）
+            if (userId != null && !userId.isBlank()) {
+                try {
+                    userService.ensureById(userId);
+                } catch (Exception e) {
+                    log.warn("mock 用户自动建号失败，继续放行: userId={}, err={}", userId, e.getMessage());
+                }
+            }
         }
 
         request.setAttribute(AuthContext.USER_ID_ATTR, userId);

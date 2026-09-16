@@ -2,9 +2,11 @@ package com.xiaoliao.api.m4.service;
 
 import com.xiaoliao.api.m4.dto.ConsentRequest;
 import com.xiaoliao.api.m4.dto.EraRequest;
+import com.xiaoliao.api.m4.dto.GenImageRequest;
 import com.xiaoliao.api.m4.dto.HelpSubmitRequest;
 import com.xiaoliao.api.m4.dto.MatchImageRequest;
 import com.xiaoliao.api.m4.dto.MomentGenerateRequest;
+import com.xiaoliao.api.m4.dto.MomentPhotoRequest;
 import com.xiaoliao.api.m4.dto.NodeRequest;
 import com.xiaoliao.api.m4.dto.PhotoUploadRequest;
 import com.xiaoliao.api.m4.dto.StorySaveRequest;
@@ -15,10 +17,15 @@ import com.xiaoliao.api.m4.vo.GardenVO;
 import com.xiaoliao.api.m4.vo.HelpDetailVO;
 import com.xiaoliao.api.m4.vo.MatchResultVO;
 import com.xiaoliao.api.m4.vo.MomentVO;
+import com.xiaoliao.api.m4.vo.MomentPhotoVO;
 import com.xiaoliao.api.m4.vo.NodeVO;
 import com.xiaoliao.api.m4.vo.PhotoVO;
+import com.xiaoliao.api.m4.vo.PlazaFeedVO;
+import com.xiaoliao.api.m4.vo.PlazaWorkVO;
 import com.xiaoliao.api.m4.vo.ShareHelpVO;
 import com.xiaoliao.api.m4.vo.StoryVO;
+import com.xiaoliao.api.m4.vo.VideoVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -38,6 +45,9 @@ public interface M4Service {
     /** 我的照片列表 */
     List<PhotoVO> listPhotos(String userId);
 
+    /** 对话内文生图：小辽根据描述生成一张照片（图片落盘 uploads/images；不落库，保存走 /photos source=gen） */
+    Map<String, Object> genImage(String userId, GenImageRequest request);
+
     /** 根据"以前的样子"描述匹配年代示意图（素材库近似检索） */
     MatchResultVO matchImage(String userId, MatchImageRequest request);
 
@@ -47,12 +57,53 @@ public interface M4Service {
     StoryVO saveStory(String userId, StorySaveRequest request);
 
     /** 故事列表（可按节点过滤） */
-    List<StoryVO> listStories(String userId, Long nodeId);
+    List<StoryVO> listStories(String userId, Long nodeId, Long eraId);
+
+    /** 删除故事（逻辑删除） */
+    void deleteStory(String userId, Long id);
+
+    /** 保存一段“回忆作品/视频”（照片组+文案+标题+配乐），原子写入照片与故事并挂到节点/年代 */
+    Map<String, Object> saveWork(String userId, String destKind, Long nodeId, String nodeLabel, String eraName,
+                                 String title, String text, String music,
+                                 List<MultipartFile> photos);
+
+    // ---------- 视频作品（后端合成） ----------
+
+    /** 上传素材包并合成视频作品，挂到人生时光节点或年代记忆 */
+    Map<String, Object> saveVideo(String userId, String destKind, Long nodeId, String nodeLabel, String eraName,
+                                  String title, String caption,
+                                  List<MultipartFile> photos, List<String> captions, MultipartFile bgm);
+
+    /** 视频作品列表（可按节点或年代过滤） */
+    List<VideoVO> listVideos(String userId, Long nodeId, Long eraId);
+
+    /** 单条视频作品 */
+    VideoVO getVideo(String userId, Long id);
+
+    /** 删除视频作品（逻辑删除） */
+    void deleteVideo(String userId, Long id);
+
+    // ---------- 广场（作品分享 + 点赞） ----------
+
+    /** 广场作品流（含我收到的赞、我的作品数；自己的作品也在流里，标 mine=true） */
+    PlazaFeedVO plazaFeed(String userId, Integer limit);
+
+    /** 把我的视频作品发到广场（同一作品重复发布直接返回已有记录） */
+    PlazaWorkVO publishPlazaWork(String userId, Long videoId, String title);
+
+    /** 从广场撤下我的作品（逻辑删除，点赞明细保留） */
+    void unpublishPlazaWork(String userId, Long workId);
+
+    /** 广场点赞 / 取消点赞（toggle），返回最新计数 */
+    PlazaWorkVO togglePlazaLike(String userId, Long workId);
 
     // ---------- 朋友圈文案 ----------
 
     /** 生成朋友圈文案（当前为规则模板，AI 引擎接入后替换） */
     List<MomentVO> generateMoments(String userId, MomentGenerateRequest request);
+
+    /** 照片 + 老人描述 → 朋友圈文案（照片/故事/文案全部落库，各页面共用这一个入口） */
+    MomentPhotoVO generateMomentsFromPhoto(String userId, MomentPhotoRequest request);
 
     /** 我的文案列表 */
     List<MomentVO> listMoments(String userId);

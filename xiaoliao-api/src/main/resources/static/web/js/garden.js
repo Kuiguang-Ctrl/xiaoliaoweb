@@ -6,7 +6,7 @@
   'use strict';
 
   var META = [
-    { key: 'storyCount', icon: '🌼', label: '故事' },
+    { key: 'videoCount', icon: '🎞️', label: '视频作品' },
     { key: 'photoCount', icon: '🖼️', label: '照片' },
     { key: 'eraCount', icon: '📖', label: '年代记忆' },
     { key: 'momentCount', icon: '💌', label: '朋友圈文案' },
@@ -14,7 +14,10 @@
   ];
   var FLOOR_X = [10, 24, 38, 52, 66, 80, 94, 108, 122, 136, 150, 164, 178, 192, 206, 220, 234, 248, 262, 276, 290, 304, 318];
 
-  function goTime(tab) { location.href = 'time.html#' + tab; }
+  function goTime(tab) { location.href = 'time.html?t=' + Date.now() + '#' + tab; }
+  function backDemo() { location.href = '../chat.html?t=' + Date.now(); }
+  window.goTime = goTime;
+  window.backDemo = backDemo;
 
   function drawScene(n) {
     var scene = $('gardenScene');
@@ -57,9 +60,9 @@
   function load() {
     M4.garden().then(function (g) {
       g = g || {};
-      // 开花数 = 故事 + 照片 + 年代 + 文案（预设 7 个时光节点不算花，明细里单独展示）
-      var content = (g.storyCount || 0) + (g.photoCount || 0) + (g.eraCount || 0) + (g.momentCount || 0);
-      $('gardenSub').textContent = '开了 ' + content + ' 朵花 · 每讲一个故事、收一张照片，花园就开一朵花';
+      // 开花数 = 视频 + 照片 + 年代 + 文案（预设 7 个时光节点不算花，明细里单独展示）
+      var content = (g.videoCount || 0) + (g.photoCount || 0) + (g.eraCount || 0) + (g.momentCount || 0);
+      $('gardenSub').textContent = '开了 ' + content + ' 朵花 · 每做一段视频、收一张照片，花园就开一朵花';
       drawScene(content);
       drawMetrics(g);
       $('gardenEmpty').style.display = content > 0 ? 'none' : '';

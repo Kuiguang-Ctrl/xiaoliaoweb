@@ -14,6 +14,12 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  # 上传大小：视频作品素材包（≤5 张照片 + 离线渲染配乐 wav 最大约 2MB）需要超过默认 1MB/10MB
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 40MB
+
   # ─── 小辽自定义配置 ───
 xiaoliao:
   ai:
@@ -31,6 +37,10 @@ xiaoliao:
     dir: ${XIAOLIAO_UPLOAD_DIR:./uploads}
     # 图片访问基础地址（生产替换为正式 https 域名）
     base-url: ${XIAOLIAO_UPLOAD_BASE_URL:http://localhost:8080}
+  # 视频作品合成（M4VideoComposer 调用 ffmpeg）
+  ffmpeg:
+    # ffmpeg 可执行文件路径：默认用 PATH 里的 ffmpeg；Windows 可填本地绝对路径，如 C:/ffmpeg/bin/ffmpeg.exe
+    path: ${XIAOLIAO_FFMPEG_PATH:ffmpeg}
   pexels:
     # Pexels 图库 API Key（免费申请 https://www.pexels.com/api/；为空时配图只走本地素材库）
     key: ${XIAOLIAO_PEXELS_KEY:}
@@ -41,6 +51,22 @@ xiaoliao:
     http-url: ${ASR_HTTP_URL:https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation}
     # 单次识别超时（录音最长 60s，给足余量）
     timeout: 90s
+  # 文生图（阿里云百炼 qwen-image；api-key 留空时回退用 asr 的同一把百炼 Key）
+  image:
+    api-key: ${XIAOLIAO_IMAGE_KEY:${xiaoliao.asr.api-key:}}
+    model: ${IMAGE_MODEL:qwen-image}
+    http-url: ${IMAGE_HTTP_URL:https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation}
+    # 单次生成超时
+    timeout: 60s
+    # 输出尺寸：1280*720 / 720*1280 / 1024*1024
+    size: ${IMAGE_SIZE:1280*720}
+  # DeepSeek 对话（前端不再直连，统一走后端 /api/ai/chat；Key 走服务端环境变量）
+  deepseek:
+    api-key: ${DEEPSEEK_API_KEY:}
+    model: ${DEEPSEEK_MODEL:deepseek-chat}
+    http-url: ${DEEPSEEK_URL:https://api.deepseek.com/chat/completions}
+    # 与前端原直连超时一致
+    timeout: 30s
   jwt:
     secret: ${XIAOLIAO_JWT_SECRET:xiaoliao-dev-secret-change-in-production-2026}
     expire-hours: 168

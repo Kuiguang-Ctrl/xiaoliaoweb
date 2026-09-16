@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时光花园 · 广场</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"><span id="sbTime">09:41</span><span>🔋 ▮▮▮</span></div>
+  <div class="notch"></div>
+
+  <div class="screen">
+    <div class="page-head">
+      <div class="ph-title">广场</div>
+      <button class="ph-gear" onclick="location.reload()" title="刷新">🔄</button>
+      <a class="ph-back" href="javascript:;" onclick="location.href='../chat.html?t='+Date.now();return false;" style="font-size:15px;padding:5px 12px;border-radius:999px;background:rgba(0,0,0,.06);white-space:nowrap" title="返回聊天">‹ 返回聊天</a>
+    </div>
+
+    <div class="page-body">
+      <div class="sub" id="plazaSub" style="margin:2px 0 10px">看看大家做的小视频，喜欢就点个赞。</div>
+
+      <!-- 我收到的赞 -->
+      <div class="like-sum">
+        <div class="like-sum-row">
+          <span class="ls-ico">❤️</span>
+          <span class="ls-label">我收到的赞</span>
+          <span class="ls-num" id="gotLikes">0</span>
+        </div>
+        <div class="like-sum-note" id="likeNote">还没有人点赞。作品做好后，记得叫朋友来广场看看～</div>
+      </div>
+
+      <button class="btn btn-gold" onclick="goMakeVideo()">🎬 找小辽做新作品</button>
+      <button class="btn btn-soft" onclick="openPubMask()">📤 把我的作品发到广场</button>
+
+      <!-- 大家的新作品：小红书式双列瀑布流 -->
+      <div class="page-pad-title">✨ 大家的新作品</div>
+      <div id="plazaFeed"><div class="empty-tip">正在加载广场…</div></div>
+    </div>
+  </div>
+
+  <!-- 底部切换：做视频 / 看作品 -->
+  <div class="tabbar">
+    <a href="javascript:;" onclick="goMakeVideo()"><span class="tb-emoji">🎬</span>做视频</a>
+    <a href="javascript:;" onclick="goTime('life');return false;"><span class="tb-emoji">📁</span>看作品</a>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- 把我的作品发到广场（挑一支视频发布/撤下） -->
+  <div class="modal-mask" id="pubMask">
+    <div class="modal-box">
+      <div class="modal-title">📤 把我的作品发到广场</div>
+      <div class="modal-sub">挑一支您做好的视频，发上去大家就能看到，也能给您点赞。</div>
+      <div id="pubList"><div class="empty-tip">正在找您的作品…</div></div>
+      <button class="btn btn-ghost" onclick="hidePubMask()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/plaza.js"></script>
+</body>
+</html>
