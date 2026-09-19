@@ -879,7 +879,7 @@ function finishMic(btn){ if(btn){ btn.classList.remove('listening'); btn.textCon
 /* ================= DeepSeek LLM ================= */
 const DS_API='https://api.deepseek.com/chat/completions';
 const DS_MODEL='deepseek-chat';
-let dsKey=localStorage.getItem('hgs_ds_key')||'sk-24383836e4be472c814980a63b99c4fb';
+let dsKey=localStorage.getItem('hgs_ds_key')||'';
 let chatHistory=[];   // 对话历史：[{role:'user'|'assistant', content:'...'}]
 const MAX_HISTORY=12; // 最多保留最近 6 轮（12 条），控制 token 成本
 

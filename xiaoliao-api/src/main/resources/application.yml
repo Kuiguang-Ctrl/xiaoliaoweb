@@ -31,7 +31,7 @@ xiaoliao:
     api-token: ${AI_API_TOKEN:}
   security:
     # 敏感字段加密密钥（生产必须用环境变量 XIAOLIAO_DATA_KEY 覆盖默认值）
-    data-key: ${XIAOLIAO_DATA_KEY:xiaoliao-dev-data-key-2026}
+    data-key: ${XIAOLIAO_DATA_KEY:dev-only-key-please-override}
   upload:
     # 图片上传本地磁盘目录（生产用环境变量 XIAOLIAO_UPLOAD_DIR 覆盖）
     dir: ${XIAOLIAO_UPLOAD_DIR:./uploads}
@@ -68,7 +68,7 @@ xiaoliao:
     # 与前端原直连超时一致
     timeout: 30s
   jwt:
-    secret: ${XIAOLIAO_JWT_SECRET:xiaoliao-dev-secret-change-in-production-2026}
+    secret: ${XIAOLIAO_JWT_SECRET:dev-only-secret-please-override}
     expire-hours: 168
   auth:
     # 鉴权开关：true=正式校验 token；false=跳过（仅联调用，配 mock-user-id）

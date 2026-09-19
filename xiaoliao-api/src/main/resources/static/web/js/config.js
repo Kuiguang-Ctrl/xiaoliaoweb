@@ -15,7 +15,7 @@ var CONFIG = {
 
   DS_API: 'https://api.deepseek.com/chat/completions',
   DS_MODEL: 'deepseek-chat',
-  DS_DEMO_KEY: 'sk-24383836e4be472c814980a63b99c4fb', // 演示 Key，可用 hgs_ds_key 覆盖
+  DS_DEMO_KEY: '',                          // 演示 Key 请自行填写，或用 hgs_ds_key 覆盖
 
   RAG_URL: 'https://xiaoliao.natapp1.cc/uploads/rag_index.json' // 知识库索引（失败自动兜底）
 };

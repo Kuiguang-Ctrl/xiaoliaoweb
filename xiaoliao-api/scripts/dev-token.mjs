@@ -15,7 +15,7 @@
  */
 import { createHmac } from 'node:crypto'
 
-const SECRET = process.env.XIAOLIAO_JWT_SECRET || 'xiaoliao-dev-secret-change-in-production-2026'
+const SECRET = process.env.XIAOLIAO_JWT_SECRET || 'dev-only-secret-please-override'
 const DEFAULT_EXPIRE_HOURS = 168 // 与 xiaoliao.jwt.expire-hours 一致
 
 const userId = process.argv[2] || '7764978f-9019-4b2f-b6b1-11862c1a5528'
