@@ -86,13 +86,21 @@ JDK 17+、Maven 3.9+、Docker（用于启动依赖服务）
 docker compose up -d
 ```
 
-### 2. 配置环境变量
+### 2. 配置密钥
+
+密钥不随仓库分发，按运行方式二选一：
 
 ```bash
-cp .env.example .env   # 按注释填写各项配置
+# 方式一：本地开发（推荐）—— 复制模板后填入真实值
+cp xiaoliao-api/src/main/resources/application-dev.yml.example \
+   xiaoliao-api/src/main/resources/application-dev.yml
+# 该文件已被 .gitignore 排除，不会进入版本库
+
+# 方式二：Docker 部署 —— 用环境变量注入
+cp .env.example .env
 ```
 
-`.env` 已被 `.gitignore` 排除，不会进入版本库。主要变量见下方「配置说明」。
+主要变量见下方「配置说明」。
 
 ### 3. 启动服务
 

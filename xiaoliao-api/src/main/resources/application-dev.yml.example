@@ -1,4 +1,10 @@
-# ─── 开发环境 ───
+# ─── 开发环境（示例文件）───
+# 使用说明：
+#   1) 复制本文件为 application-dev.yml
+#        cp application-dev.yml.example application-dev.yml
+#   2) 填入真实的本地开发密钥
+#   application-dev.yml 已被 .gitignore 排除，不会提交到仓库。
+#
 # 登录策略：真实身份来自企微客服（external_userid → JWT → 小程序卡片 token），小程序侧不做 wx.login。
 # 开发时关闭鉴权，直开小程序用 mock 用户即可全功能联调；生产（application.yml）保持开启走企微卡片 token。
 xiaoliao:
@@ -7,23 +13,23 @@ xiaoliao:
     mock-user-id: 7764978f-9019-4b2f-b6b1-11862c1a5528
   wx:
     # 小程序测试号（预留：将来若要启用 wx.login 直开登录再使用）
-    appid: wx4e429afa4c177a40
-    secret: 27048287aadd42a9cc247c39a07587b0
+    appid: ${WX_APPID:}
+    secret: ${WX_SECRET:}
   security:
     # 敏感字段加密密钥（dev 固定值；生产用环境变量 XIAOLIAO_DATA_KEY）
-    data-key: xiaoliao-dev-data-key-2026
+    data-key: ${XIAOLIAO_DATA_KEY:}
   pexels:
-    # Pexels 图库 API Key（dev 固定值；生产用环境变量 XIAOLIAO_PEXELS_KEY）
-    key: iIZKWKhDP2KRkvhjqja7xKugWl1GggoDW5uRSYqVqMRFXXKSGhmWe1BY
+    # Pexels 图库 API Key（生产用环境变量 XIAOLIAO_PEXELS_KEY）
+    key: ${XIAOLIAO_PEXELS_KEY:}
   ai:
     # 本地 AI 引擎 .env 里的 API_TOKEN（生产用环境变量 AI_API_TOKEN 注入）
-    api-token: f5y2I6nxDg22K3yEHEU32dLqLX3AQILzMOSLZ4Yx4m77zERYRaXMH1FFBZQQaunY
+    api-token: ${AI_API_TOKEN:}
   asr:
-    # 语音识别 Key（与 AI 引擎共用阿里云百炼账号；生产用环境变量 QWEN_API_KEY 注入，不要直接提交到生产）
-    api-key: "sk-ws-H.PMMEDXH.e76M.MEUCIGrVn8qZdb5_4GfggiMSjaOflfZJj0O6bcxaZRoMP--dAiEA1JzyYbDXrk5pdGza9zsH3swpAW69wptGaiMx6cnl4i0"
+    # 语音识别 Key（与 AI 引擎共用阿里云百炼账号；生产用环境变量 QWEN_API_KEY 注入）
+    api-key: ${QWEN_API_KEY:}
   deepseek:
-    # DeepSeek Key（原来内嵌在小程序/网页前端，现收归后端；生产用环境变量 DEEPSEEK_API_KEY 覆盖）
-    api-key: "sk-24383836e4be472c814980a63b99c4fb"
+    # DeepSeek Key（生产用环境变量 DEEPSEEK_API_KEY 覆盖）
+    api-key: ${DEEPSEEK_API_KEY:}
 
 spring:
   datasource:
@@ -49,18 +55,18 @@ logging:
 
 # ---- 企业微信（微信客服）----
 wecom:
-  corp-id: wwedae3783fd87e8eb
-  secret: 6c-XqDo0QMHBYEJJBqVG9XWa-6W83ERJbwnQAi7T8Ts
-  token: xiaoliao2026
-  aes-key: fVlox8auvnLR1M2z1gn8kVAjb5Ay78sZvp8nkFifwKA
+  corp-id: ${WECOM_CORP_ID:}
+  secret: ${WECOM_SECRET:}
+  token: ${WECOM_TOKEN:}
+  aes-key: ${WECOM_AES_KEY:}
   kf:
-    open-kfid: wkCP0EbQAA3t2kcyOYR3--M3EGppSzrw
+    open-kfid: ${WECOM_KF_OPEN_KFID:}
   poll:
     enabled: false
     interval-ms: 10000
   group-reminder:
     enabled: false
-    webhook: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=b45218d3-0421-41e1-ad7d-7e26c7a42ceb
+    webhook: ${WECOM_GROUP_REMINDER_WEBHOOK:}
     cron: 0 0 9 * * ?
     content: 现在是九点，该打卡啦～ 需要帮助可以点击群里的「客服助理」
     webhook-content: 现在是九点，该打卡啦～ 需要帮助可点击 [客服助理](https://work.weixin.qq.com/kfid/kfc46eff57a06e15e48)
